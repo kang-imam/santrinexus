@@ -1,29 +1,24 @@
 @php
-    $startYear = (int) config('company.legal.copyright_year', config('company.founded_year', date('Y')));
-    $currentYear = (int) date('Y');
+    $currentYear = now()->year;
+    $startYear = (int) config('company.legal.copyright_year', config('company.founded_year', $currentYear));
+    $startYear = $startYear > 0 && $startYear <= $currentYear ? $startYear : $currentYear;
+    $copyrightName = config('company.legal.copyright') ?: config('company.legal_name') ?: config('company.name');
+    $shortName = config('company.short_name') ?: config('company.name');
+    $shortTagline = config('company.brand.short_tagline');
+    $copyrightPeriod = $startYear < $currentYear ? $startYear . '–' . $currentYear : (string) $currentYear;
 @endphp
-<div class="flex flex-col gap-5 py-6 sm:flex-row sm:items-center sm:justify-between">
-    <div class="space-y-1.5 text-center sm:text-left">
-        <p class="text-xs text-subtle">
-            &copy; {{ $startYear }}{{ $currentYear > $startYear ? '–' . $currentYear : '' }}
-            <span
-                class="font-semibold text-muted">{{ config('company.legal.copyright', config('company.legal_name')) }}</span>.
-            All rights reserved.
+<div class="flex flex-col items-center justify-between gap-3 py-6 text-center sm:flex-row sm:text-left">
+    <div class="min-w-0">
+        <p class="text-xs leading-6 text-muted">
+            © {{ $copyrightPeriod }} {{ $copyrightName }}. Hak cipta dilindungi.
         </p>
-        <p class="text-xs text-subtle">
-            {{ config('company.name') }} is a digital infrastructure and technology ecosystem.
-        </p>
-    </div>
-    <div class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 sm:justify-end">
-        @if (config('company.legal.privacy_url'))
-            <a href="{{ config('company.legal.privacy_url') }}"
-                class="text-xs text-subtle transition-colors hover:text-primary">Privacy Policy</a>
+        @if (filled($shortTagline))
+            <p class="mt-1 text-xs leading-5 text-subtle">
+                {{ $shortTagline }}
+            </p>
         @endif
-        @if (config('company.legal.terms_url'))
-            <a href="{{ config('company.legal.terms_url') }}"
-                class="text-xs text-subtle transition-colors hover:text-primary">Terms & Conditions</a>
-        @endif
-        <span class="hidden h-1 w-1 rounded-full bg-border-bright sm:block"></span>
-        <span class="text-xs font-medium text-muted">{{ config('company.brand.short_tagline') }}</span>
     </div>
+    <p class="shrink-0 text-xs font-medium text-muted">
+        {{ $shortName }}
+    </p>
 </div>

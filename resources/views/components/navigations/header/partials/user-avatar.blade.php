@@ -16,23 +16,23 @@
     $avatar =
         is_string($avatar) &&
         filter_var($avatar, FILTER_VALIDATE_URL) &&
-        in_array(parse_url($avatar, PHP_URL_SCHEME), ['http', 'https'], true)
+        in_array(strtolower((string) parse_url($avatar, PHP_URL_SCHEME)), ['http', 'https'], true)
             ? $avatar
             : null;
     $sizes = [
-        'xs' => 'size-7 text-[10px]',
-        'sm' => 'size-8 text-xs',
-        'md' => 'size-9 text-sm',
-        'lg' => 'size-11 text-base',
-        'xl' => 'size-14 text-lg',
-        '2xl' => 'size-20 text-2xl',
+        'xs' => ['size-7', 'text-[10px]', 'size-2'],
+        'sm' => ['size-8', 'text-xs', 'size-2'],
+        'md' => ['size-9', 'text-sm', 'size-2.5'],
+        'lg' => ['size-11', 'text-base', 'size-3'],
+        'xl' => ['size-14', 'text-lg', 'size-3.5'],
+        '2xl' => ['size-20', 'text-2xl', 'size-4'],
     ];
     $shapes = [
         'circle' => 'rounded-full',
-        'rounded' => 'rounded-xl',
-        'square' => 'rounded-none',
+        'rounded' => 'rounded-2xl',
+        'square' => 'rounded-lg',
     ];
-    $avatarSize = $sizes[$size] ?? $sizes['md'];
+    [$avatarSize, $textSize, $statusSize] = $sizes[$size] ?? $sizes['md'];
     $avatarShape = $shapes[$shape] ?? $shapes['circle'];
     $statusColors = [
         'online' => 'bg-accent',
@@ -43,26 +43,28 @@
     $statusColor = $statusColors[$status] ?? null;
     $imageAlt = $alt ?? 'Foto profil ' . $name;
     $avatarId = 'avatar-' . \Illuminate\Support\Str::uuid();
+    $fallbackId = 'avatar-fallback-' . \Illuminate\Support\Str::uuid();
 @endphp
-<span {{ $attributes->class(['relative inline-flex shrink-0 align-middle']) }}
+<span {{ $attributes->class(['group/avatar relative inline-flex shrink-0 align-middle']) }}
     @if ($showStatus && $statusColor) data-status="{{ $status }}" @endif>
     @if ($avatar)
         <img id="{{ $avatarId }}" src="{{ $avatar }}" alt="{{ $imageAlt }}" width="80" height="80"
             loading="lazy" decoding="async" referrerpolicy="no-referrer"
-            x-on:error="$el.hidden = true; $el.nextElementSibling.hidden = false"
-            class="{{ $avatarSize }} {{ $avatarShape }} border border-border bg-surface object-cover">
-        <span hidden role="img" aria-label="Avatar {{ $name }}"
-            class="{{ $avatarSize }} {{ $avatarShape }} inline-flex items-center justify-center border border-primary/20 bg-primary/10 font-bold text-primary">
+            onerror="this.hidden=true;document.getElementById('{{ $fallbackId }}').hidden=false"
+            class="{{ $avatarSize }} {{ $avatarShape }} border border-border/80 bg-surface object-cover shadow-sm shadow-black/10 ring-2 ring-transparent transition-all duration-200 group-hover/avatar:border-primary/40 group-hover/avatar:ring-primary/10">
+        <span id="{{ $fallbackId }}" hidden role="img" aria-label="Avatar {{ $name }}"
+            class="{{ $avatarSize }} {{ $avatarShape }} inline-flex items-center justify-center border border-primary/25 bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/10 font-bold tracking-wide text-primary shadow-sm shadow-primary/5 ring-2 ring-primary/5">
             {{ $initials ?: 'U' }}
         </span>
     @else
         <span role="img" aria-label="Avatar {{ $name }}"
-            class="{{ $avatarSize }} {{ $avatarShape }} inline-flex items-center justify-center border border-primary/20 bg-primary/10 font-bold text-primary">
+            class="{{ $avatarSize }} {{ $avatarShape }} inline-flex items-center justify-center border border-primary/25 bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/10 font-bold tracking-wide text-primary shadow-sm shadow-primary/5 ring-2 ring-primary/5 transition-all duration-200 group-hover/avatar:border-primary/40 group-hover/avatar:ring-primary/10">
             {{ $initials ?: 'U' }}
         </span>
     @endif
     @if ($showStatus && $statusColor)
-        <span class="absolute bottom-0 right-0 size-3 rounded-full border-2 border-surface {{ $statusColor }}"
+        <span
+            class="absolute bottom-0 right-0 {{ $statusSize }} rounded-full border-2 border-surface shadow-sm {{ $statusColor }}"
             role="img" aria-label="Status {{ $status }}"></span>
     @endif
 </span>
