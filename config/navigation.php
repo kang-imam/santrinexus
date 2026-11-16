@@ -60,13 +60,6 @@ return [
                     'icon' => 'heroicon-o-squares-2x2',
                 ],
                 [
-                    'key' => 'services.category',
-                    'label' => 'Kategori Layanan',
-                    'route' => 'services.category',
-                    'parameters' => ['slug' => 'general'],
-                    'icon' => 'heroicon-o-tag',
-                ],
-                [
                     'key' => 'services.process',
                     'label' => 'Proses Layanan',
                     'route' => 'services.process',
@@ -554,12 +547,6 @@ return [
                 'key' => 'content.services.index',
                 'label' => 'Layanan',
                 'route' => 'services.index',
-            ],
-            [
-                'key' => 'content.services.category',
-                'label' => 'Kategori Layanan',
-                'route' => 'services.category',
-                'parameters' => ['slug' => 'category'],
             ],
             [
                 'key' => 'content.services.process',
