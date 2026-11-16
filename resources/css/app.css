@@ -6,7 +6,6 @@
 @source "../**/*.js";
 
 @theme {
-    --font-sans: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
     --color-primary: #22d3ee;
     --color-secondary: #38bdf8;
     --color-accent: #a3e635;
@@ -24,6 +23,7 @@
     --color-warning: #fbbf24;
     --color-danger: #fb7185;
     --color-scrollbar-hover: #475569;
+    --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
@@ -37,51 +37,43 @@
     html {
         min-height: 100%;
         scroll-behavior: smooth;
-        scrollbar-gutter: stable;
+        scrollbar-color: var(--color-border-bright) var(--color-background);
+        scrollbar-width: thin;
         -webkit-text-size-adjust: 100%;
         text-size-adjust: 100%;
-        -webkit-tap-highlight-color: transparent;
     }
 
     body {
-        min-width: 320px;
         min-height: 100vh;
         margin: 0;
         background-color: var(--color-background);
         color: var(--color-foreground);
         font-family: var(--font-sans);
-        font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-        font-kerning: normal;
-        text-rendering: optimizeLegibility;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
 
     button,
     input,
-    optgroup,
-    select,
-    textarea {
+    textarea,
+    select {
         font: inherit;
     }
 
     button,
-    select {
+    [role="button"] {
         cursor: pointer;
     }
 
     button:disabled,
-    input:disabled,
-    select:disabled,
-    textarea:disabled {
+    [role="button"][aria-disabled="true"] {
         cursor: not-allowed;
     }
 
     img,
-    picture,
+    svg,
     video,
-    canvas,
-    svg {
+    canvas {
         display: block;
         max-width: 100%;
     }
@@ -96,14 +88,9 @@
         text-decoration: none;
     }
 
-    table {
-        border-collapse: collapse;
-        border-spacing: 0;
-    }
-
     ::selection {
-        background-color: var(--color-primary);
-        color: var(--color-background);
+        background-color: rgba(34, 211, 238, .25);
+        color: var(--color-foreground);
     }
 
     :focus-visible {
@@ -132,23 +119,25 @@
     }
 
     .scrollbar-thin::-webkit-scrollbar-thumb {
-        background-color: var(--color-border-bright);
         border-radius: 9999px;
+        background: var(--color-border-bright);
     }
 
     .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-        background-color: var(--color-scrollbar-hover);
+        background: var(--color-scrollbar-hover);
+    }
+
+    .text-balance {
+        text-wrap: balance;
+    }
+
+    .text-pretty {
+        text-wrap: pretty;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-
-    *,
-    *::before,
-    *::after {
-        scroll-behavior: auto !important;
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
+    html {
+        scroll-behavior: auto;
     }
 }

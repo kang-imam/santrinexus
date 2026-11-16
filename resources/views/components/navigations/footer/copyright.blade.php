@@ -5,10 +5,13 @@
     $copyrightName = config('company.legal.copyright') ?: config('company.legal_name') ?: config('company.name');
     $shortName = config('company.short_name') ?: config('company.name');
     $tagline = config('company.brand.tagline');
-    $logo = config('company.brand.logo.primary', 'logo-santri-nexus.svg');
+    $logo = config('company.brand.logo.primary', 'logo_santrinexus.svg');
     $logoPath = 'images/branding/' . ltrim($logo, '/');
-    if (!file_exists(public_path($logoPath))) {
+    if (!is_file(public_path($logoPath))) {
         $logoPath = ltrim($logo, '/');
+    }
+    if (!is_file(public_path($logoPath))) {
+        $logoPath = null;
     }
     $copyrightPeriod = $startYear < $currentYear ? $startYear . '–' . $currentYear : (string) $currentYear;
     $legalDocuments = config('company.legal.documents', []);
@@ -42,9 +45,11 @@
             class="group relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-primary/20 bg-primary/[0.07] shadow-[0_0_24px_rgba(34,211,238,0.07)]">
             <span class="absolute inset-0 bg-gradient-to-br from-primary/[0.12] to-transparent opacity-70"
                 aria-hidden="true"></span>
-            <img src="{{ asset($logoPath) }}" alt="{{ $shortName }}"
-                class="relative h-7 w-7 object-contain transition-transform duration-300 group-hover:scale-110"
-                loading="lazy">
+            @if ($logoPath)
+                <img src="{{ asset($logoPath) }}" alt="{{ $shortName }}"
+                    class="relative h-7 w-7 object-contain transition-transform duration-300 group-hover:scale-110"
+                    loading="lazy">
+            @endif
         </div>
         <div class="min-w-0">
             <p class="text-xs leading-6 text-muted">

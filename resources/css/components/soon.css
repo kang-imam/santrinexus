@@ -1,25 +1,30 @@
 .soon-ambient {
+    position: absolute;
+    border-radius: 9999px;
     pointer-events: none;
-    filter: blur(90px);
+    filter: blur(65px);
+    opacity: .2;
+    will-change: transform, opacity;
 }
 
 .soon-ambient-one {
-    background: rgba(34, 211, 238, .08);
-    animation: soon-ambient 7s ease-in-out infinite;
+    background: radial-gradient(circle, rgba(8, 145, 178, .85) 0%, rgba(8, 145, 178, .25) 42%, transparent 72%);
+    animation: soon-ambient-one 9s ease-in-out infinite alternate;
 }
 
 .soon-ambient-two {
-    background: rgba(56, 189, 248, .07);
-    animation: soon-ambient 9s ease-in-out infinite reverse;
+    background: radial-gradient(circle, rgba(124, 58, 237, .75) 0%, rgba(124, 58, 237, .2) 45%, transparent 72%);
+    animation: soon-ambient-two 11s ease-in-out infinite alternate;
 }
 
 .soon-ambient-three {
-    background: rgba(163, 230, 53, .045);
-    animation: soon-ambient 8s ease-in-out infinite;
+    background: radial-gradient(circle, rgba(14, 116, 144, .8) 0%, rgba(14, 116, 144, .2) 45%, transparent 72%);
+    animation: soon-ambient-three 10s ease-in-out infinite alternate;
 }
 
 .soon-reactor {
     isolation: isolate;
+    contain: layout style;
 }
 
 .soon-orbit {
@@ -27,36 +32,39 @@
     inset: 0;
     border-radius: 50%;
     pointer-events: none;
+    transform-origin: center;
+    will-change: transform;
 }
 
 .soon-orbit-one {
-    border: 1px solid transparent;
-    border-top-color: rgba(34, 211, 238, .9);
-    border-right-color: rgba(167, 139, 250, .4);
-    animation: soon-spin 9s linear infinite;
+    border: 1px solid rgba(103, 232, 249, .35);
+    border-right-color: rgba(167, 139, 250, .75);
+    border-bottom-color: rgba(103, 232, 249, .12);
+    animation: soon-spin 12s linear infinite;
 }
 
 .soon-orbit-two {
     inset: 12px;
-    border: 1px dashed rgba(56, 189, 248, .45);
-    animation: soon-spin-reverse 14s linear infinite;
+    border: 1px dashed rgba(56, 189, 248, .4);
+    animation: soon-spin-reverse 18s linear infinite;
 }
 
 .soon-orbit-three {
     inset: 28px;
     border: 1px solid transparent;
-    border-bottom-color: rgba(167, 139, 250, .8);
-    border-left-color: rgba(34, 211, 238, .4);
-    animation: soon-spin 12s linear infinite;
+    border-bottom-color: rgba(167, 139, 250, .75);
+    border-left-color: rgba(103, 232, 249, .5);
+    animation: soon-spin 9s linear infinite;
 }
 
 .soon-orbit-core {
     position: absolute;
     inset: 44px;
-    border: 1px solid rgba(34, 211, 238, .12);
+    border: 1px solid rgba(103, 232, 249, .2);
     border-radius: 50%;
-    box-shadow: 0 0 25px rgba(34, 211, 238, .08), inset 0 0 25px rgba(34, 211, 238, .06);
-    animation: soon-core-pulse 3s ease-in-out infinite;
+    box-shadow: 0 0 25px rgba(34, 211, 238, .12), inset 0 0 25px rgba(34, 211, 238, .08);
+    animation: soon-core-pulse 4s ease-in-out infinite;
+    will-change: transform, opacity;
 }
 
 .soon-orbit-dot {
@@ -64,6 +72,8 @@
     inset: 0;
     border-radius: 50%;
     pointer-events: none;
+    animation: soon-spin 7s linear infinite;
+    will-change: transform;
 }
 
 .soon-orbit-dot span {
@@ -74,32 +84,28 @@
     height: 9px;
     border-radius: 50%;
     background: #67e8f9;
-    box-shadow: 0 0 8px 3px rgba(34, 211, 238, .7);
+    box-shadow: 0 0 8px #67e8f9, 0 0 18px rgba(103, 232, 249, .8), 0 0 28px rgba(103, 232, 249, .35);
     transform: translateX(-50%);
-}
-
-.soon-orbit-dot-one {
-    animation: soon-spin 5s linear infinite;
 }
 
 .soon-orbit-dot-two {
     inset: 12px;
-    animation: soon-spin-reverse 7s linear infinite;
+    animation: soon-spin-reverse 6s linear infinite;
 }
 
 .soon-orbit-dot-two span {
-    background: #c4b5fd;
-    box-shadow: 0 0 10px 3px rgba(167, 139, 250, .8);
+    background: #a78bfa;
+    box-shadow: 0 0 8px #a78bfa, 0 0 18px rgba(167, 139, 250, .8), 0 0 28px rgba(167, 139, 250, .35);
 }
 
 .soon-orbit-dot-three {
     inset: 28px;
-    animation: soon-spin 6s linear infinite;
+    animation: soon-spin 5s linear infinite;
 }
 
 .soon-orbit-dot-three span {
     background: #f0abfc;
-    box-shadow: 0 0 10px 3px rgba(232, 121, 249, .8);
+    box-shadow: 0 0 8px #f0abfc, 0 0 18px rgba(240, 171, 252, .8), 0 0 28px rgba(240, 171, 252, .35);
 }
 
 .soon-particle {
@@ -107,85 +113,91 @@
     width: 5px;
     height: 5px;
     border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 9px currentColor, 0 0 18px currentColor;
     pointer-events: none;
+    will-change: transform, opacity;
+    animation: soon-particle-float 3.5s ease-in-out infinite;
 }
 
 .soon-particle-one {
-    top: 24%;
-    left: 8%;
-    background: #38bdf8;
-    box-shadow: 0 0 12px #38bdf8;
-    animation: soon-float 3s ease-in-out infinite;
+    top: 15%;
+    left: 15%;
+    color: #67e8f9;
 }
 
 .soon-particle-two {
+    top: 20%;
     right: 12%;
-    bottom: 22%;
-    background: #a78bfa;
-    box-shadow: 0 0 12px #a78bfa;
-    animation: soon-float 4s ease-in-out infinite reverse;
+    color: #a78bfa;
+    animation-delay: -.8s;
 }
 
 .soon-particle-three {
-    top: 18%;
-    right: 20%;
-    background: #f0abfc;
-    box-shadow: 0 0 12px #f0abfc;
-    animation: soon-blink 2s ease-in-out infinite;
+    bottom: 15%;
+    left: 20%;
+    color: #a3e635;
+    animation-delay: -1.5s;
 }
 
 .soon-particle-four {
-    bottom: 16%;
-    left: 22%;
-    background: #bef264;
-    box-shadow: 0 0 12px #bef264;
-    animation: soon-blink 3s ease-in-out infinite;
+    right: 18%;
+    bottom: 18%;
+    color: #f0abfc;
+    animation-delay: -2.2s;
 }
 
 .soon-energy-core {
     z-index: 2;
-    box-shadow: 0 0 30px rgba(34, 211, 238, .18), 0 0 70px rgba(34, 211, 238, .08), inset 0 0 25px rgba(34, 211, 238, .08);
-    animation: soon-core-float 5s ease-in-out infinite, soon-core-color 8s linear infinite;
+    isolation: isolate;
+    box-shadow: 0 0 25px rgba(34, 211, 238, .15), 0 0 65px rgba(34, 211, 238, .1), inset 0 0 25px rgba(34, 211, 238, .08);
+    animation: soon-core-float 4s ease-in-out infinite, soon-core-color 5s ease-in-out infinite;
+    will-change: transform, box-shadow;
 }
 
 .soon-core-inner {
     pointer-events: none;
-}
-
-.soon-core-glow {
-    background: radial-gradient(circle, rgba(34, 211, 238, .12), transparent 70%);
-    animation: soon-blink 3s ease-in-out infinite;
+    box-shadow: inset 0 0 20px rgba(103, 232, 249, .06);
 }
 
 .soon-core-scan {
+    z-index: 1;
     pointer-events: none;
 }
 
 .soon-core-scan span {
     position: absolute;
-    top: 0;
-    left: -60%;
-    width: 45%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(103, 232, 249, .22), transparent);
-    transform: skewX(-20deg);
-    animation: soon-scan 3s ease-in-out infinite;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    height: 65%;
+    background: linear-gradient(to bottom, transparent, rgba(103, 232, 249, .16), transparent);
+    animation: soon-scan 3.5s ease-in-out infinite;
+    will-change: transform;
+}
+
+.soon-core-glow {
+    background: radial-gradient(circle at center, rgba(34, 211, 238, .18), transparent 70%);
+    pointer-events: none;
+    animation: soon-blink 3s ease-in-out infinite;
+    will-change: opacity;
 }
 
 .soon-main-icon {
-    filter: drop-shadow(0 0 8px rgba(34, 211, 238, .7));
+    filter: drop-shadow(0 0 8px rgba(103, 232, 249, .55));
     animation: soon-icon-glow 3s ease-in-out infinite;
+    will-change: filter;
 }
 
 .soon-floating-card {
     z-index: 3;
-    box-shadow: 0 0 20px rgba(167, 139, 250, .15);
     animation: soon-float 4s ease-in-out infinite;
+    will-change: transform;
 }
 
 .soon-floating-card-alt {
-    box-shadow: 0 0 20px rgba(34, 211, 238, .15);
-    animation-delay: -1.5s;
+    animation-delay: -2s;
+    animation-direction: reverse;
 }
 
 @keyframes soon-spin {
@@ -208,17 +220,39 @@
     }
 }
 
-@keyframes soon-ambient {
-
-    0%,
-    100% {
-        opacity: .45;
-        scale: .9;
+@keyframes soon-ambient-one {
+    0% {
+        transform: translate3d(-14px, -10px, 0) scale(.9);
+        opacity: .12;
     }
 
-    50% {
-        opacity: 1;
-        scale: 1.15;
+    100% {
+        transform: translate3d(18px, 16px, 0) scale(1.15);
+        opacity: .3;
+    }
+}
+
+@keyframes soon-ambient-two {
+    0% {
+        transform: translate3d(0, 0, 0) scale(.9);
+        opacity: .1;
+    }
+
+    100% {
+        transform: translate3d(24px, -18px, 0) scale(1.18);
+        opacity: .28;
+    }
+}
+
+@keyframes soon-ambient-three {
+    0% {
+        transform: translate3d(0, 0, 0) scale(.9);
+        opacity: .12;
+    }
+
+    100% {
+        transform: translate3d(-20px, 18px, 0) scale(1.16);
+        opacity: .3;
     }
 }
 
@@ -226,13 +260,13 @@
 
     0%,
     100% {
+        transform: scale(.94);
         opacity: .5;
-        scale: .94;
     }
 
     50% {
+        transform: scale(1.06);
         opacity: 1;
-        scale: 1.06;
     }
 }
 
@@ -240,11 +274,11 @@
 
     0%,
     100% {
-        transform: translateY(0);
+        transform: translate3d(0, 0, 0);
     }
 
     50% {
-        transform: translateY(-9px);
+        transform: translate3d(0, -7px, 0);
     }
 }
 
@@ -252,15 +286,25 @@
 
     0%,
     100% {
-        border-color: rgba(34, 211, 238, .3);
+        box-shadow: 0 0 25px rgba(34, 211, 238, .15), 0 0 65px rgba(34, 211, 238, .1), inset 0 0 25px rgba(34, 211, 238, .08);
     }
 
-    33% {
-        border-color: rgba(167, 139, 250, .5);
+    50% {
+        box-shadow: 0 0 35px rgba(34, 211, 238, .25), 0 0 85px rgba(139, 92, 246, .18), inset 0 0 30px rgba(34, 211, 238, .14);
+    }
+}
+
+@keyframes soon-particle-float {
+
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0) scale(.8);
+        opacity: .4;
     }
 
-    66% {
-        border-color: rgba(232, 121, 249, .4);
+    50% {
+        transform: translate3d(0, -12px, 0) scale(1.3);
+        opacity: 1;
     }
 }
 
@@ -268,11 +312,11 @@
 
     0%,
     100% {
-        transform: translateY(0);
+        transform: translate3d(0, 0, 0) rotate(0deg);
     }
 
     50% {
-        transform: translateY(-10px);
+        transform: translate3d(0, -9px, 0) rotate(5deg);
     }
 }
 
@@ -281,24 +325,20 @@
     0%,
     100% {
         opacity: .3;
-        scale: .8;
     }
 
     50% {
-        opacity: 1;
-        scale: 1.2;
+        opacity: .85;
     }
 }
 
 @keyframes soon-scan {
-
-    0%,
-    100% {
-        left: -60%;
+    0% {
+        transform: translateY(0);
     }
 
-    50% {
-        left: 120%;
+    100% {
+        transform: translateY(250%);
     }
 }
 
@@ -306,26 +346,10 @@
 
     0%,
     100% {
-        filter: drop-shadow(0 0 5px rgba(34, 211, 238, .4));
+        filter: drop-shadow(0 0 5px rgba(103, 232, 249, .35));
     }
 
     50% {
-        filter: drop-shadow(0 0 16px rgba(34, 211, 238, 1));
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-
-    .soon-ambient,
-    .soon-orbit,
-    .soon-orbit-core,
-    .soon-orbit-dot,
-    .soon-particle,
-    .soon-energy-core,
-    .soon-core-glow,
-    .soon-core-scan span,
-    .soon-main-icon,
-    .soon-floating-card {
-        animation: none !important;
+        filter: drop-shadow(0 0 13px rgba(103, 232, 249, .85));
     }
 }

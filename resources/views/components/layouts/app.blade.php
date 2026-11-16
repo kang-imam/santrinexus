@@ -14,8 +14,7 @@
     </a>
     <x-navigations.header.index />
     <div class="mx-auto flex w-full max-w-7xl flex-1 flex-col">
-        <main id="main-content" tabindex="-1"
-            class="min-w-0 flex-1 px-4 py-6 outline-none sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+        <main id="main-content" tabindex="-1" class="min-w-0 flex-1 px-0 py-0 outline-none">
             {{ $slot }}
         </main>
     </div>

@@ -30,7 +30,7 @@
             </div>
         </div>
         <main id="main-content" tabindex="-1"
-            class="relative flex flex-1 flex-col items-center justify-center px-4 py-10 outline-none sm:px-6 sm:py-14">
+            class="relative flex flex-1 flex-col items-center justify-center px-0 py-0 outline-none">
             <div class="relative z-10 w-full {{ $maxWidth }}">
                 <div class="animate-[auth-enter_0.6s_cubic-bezier(0.16,1,0.3,1)_both]">
                     {{ $slot }}
