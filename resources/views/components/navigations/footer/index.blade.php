@@ -1,5 +1,5 @@
 <footer class="relative mt-auto overflow-hidden border-t border-border bg-background">
-    <div class="pointer-events-none absolute inset-0 overflow-hidden">
+    <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
         <div class="absolute -top-40 left-0 h-80 w-80 rounded-full bg-cyan-dark/10 blur-[100px]"></div>
         <div class="absolute -bottom-40 right-0 h-80 w-80 rounded-full bg-secondary/10 blur-[100px]"></div>
     </div>
@@ -10,9 +10,6 @@
             </div>
             <div class="lg:col-span-2">
                 <x-navigations.footer.navigation />
-            </div>
-            <div class="lg:col-span-3">
-                <x-navigations.footer.ecosystem />
             </div>
             <div class="lg:col-span-3">
                 <x-navigations.footer.contact />
