@@ -15,9 +15,10 @@
 @endphp
 @if ($navigation !== [])
     <nav aria-label="Navigasi footer" class="w-full">
-        <div class="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div
+            class="grid grid-cols-1 gap-x-10 gap-y-12 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-14 lg:grid-cols-4 lg:gap-x-10 lg:gap-y-12">
             @foreach ($navigation as $group)
-                <div class="min-w-0">
+                <div class="group min-w-0">
                     <x-navigations.footer.partials.navigation-group :group="$group" />
                 </div>
             @endforeach

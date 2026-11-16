@@ -23,16 +23,23 @@
     <section class="min-w-0" @if ($level > 0 && $label !== null && $label !== '') aria-label="{{ $label }}" @endif>
         @if ($label !== null && $label !== '')
             <h3 @class([
-                'mb-5 font-bold tracking-wide text-foreground',
-                'text-sm' => $level === 0,
-                'mb-3 text-xs font-semibold text-muted' => $level > 0,
+                'flex items-center font-bold text-foreground',
+                'mb-6 gap-3 text-sm tracking-wide' => $level === 0,
+                'mb-3 gap-2 text-xs font-semibold tracking-wider text-muted' => $level > 0,
             ])>
-                {{ $label }}
+                @if ($level === 0)
+                    <span class="relative flex h-5 w-1 shrink-0 overflow-hidden rounded-full bg-primary"></span>
+                    <span>{{ $label }}</span>
+                    <span class="h-px min-w-3 flex-1 bg-linear-to-r from-primary/25 to-transparent"></span>
+                @else
+                    <span class="h-1 w-1 shrink-0 rounded-full bg-primary/70"></span>
+                    <span>{{ $label }}</span>
+                @endif
             </h3>
         @endif
         <ul @class([
-            'space-y-3' => $level === 0,
-            'space-y-2 border-l border-border pl-4' => $level > 0,
+            'space-y-3.5' => $level === 0,
+            'space-y-2.5 border-l border-white/[0.08] pl-4' => $level > 0,
         ])>
             @foreach ($visibleItems as $item)
                 @php
@@ -43,7 +50,7 @@
                     <x-navigations.footer.partials.navigation-link :href="$item['url'] ?? null" :label="$item['label']" :icon="$item['icon'] ?? null"
                         :active="$item['active'] ?? false" :target="$item['target'] ?? null" :rel="$item['rel'] ?? null" :badge="$item['badge'] ?? null" />
                     @if ($hasChildren)
-                        <div class="mt-3">
+                        <div class="mt-3 pl-1">
                             <x-navigations.footer.partials.navigation-group :group="['items' => $children]" :level="$level + 1" />
                         </div>
                     @endif

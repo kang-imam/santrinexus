@@ -9,7 +9,7 @@
 <body
     class="flex min-h-screen flex-col bg-background font-sans text-foreground antialiased selection:bg-primary selection:text-background">
     <a href="#main-content"
-        class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:bg-primary focus:px-5 focus:py-3 focus:font-semibold focus:text-background focus:shadow-lg focus:outline-none">
+        class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-100 focus:rounded-xl focus:bg-primary focus:px-5 focus:py-3 focus:font-semibold focus:text-background focus:shadow-lg focus:outline-none">
         Lewati ke konten utama
     </a>
     <x-navigations.header.index />

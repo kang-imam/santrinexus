@@ -32,9 +32,9 @@
         <a href="{{ $href }}" @if ($linkTarget) target="{{ $linkTarget }}" @endif
             @if ($linkRel) rel="{{ $linkRel }}" @endif
             @if ($isActive) aria-current="page" @endif @class([
-                'group inline-flex min-w-0 max-w-full items-center gap-2.5 text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                'group inline-flex min-w-0 max-w-full items-center gap-2.5 rounded-lg py-1 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                 'font-semibold text-primary' => $isActive,
-                'text-muted hover:text-primary' => !$isActive,
+                'font-medium text-muted hover:translate-x-1 hover:text-primary' => !$isActive,
             ])>
             @if ($icon)
                 <x-dynamic-component :component="$icon" @class([
@@ -44,26 +44,28 @@
                 ]) aria-hidden="true" />
             @else
                 <span @class([
-                    'h-1.5 w-1.5 shrink-0 rounded-full transition-colors duration-200',
-                    'bg-primary' => $isActive,
-                    'bg-subtle group-hover:bg-primary' => !$isActive,
+                    'h-1.5 w-1.5 shrink-0 rounded-full transition-all duration-200',
+                    'bg-primary shadow-[0_0_8px_var(--color-primary)]' => $isActive,
+                    'bg-subtle group-hover:bg-primary group-hover:shadow-[0_0_8px_var(--color-primary)]' => !$isActive,
                 ]) aria-hidden="true"></span>
             @endif
             <span class="min-w-0 truncate">{{ $label }}</span>
             @if ($badgeLabel !== '')
                 <span
-                    class="ml-auto shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold leading-4 text-primary">
+                    class="ml-auto shrink-0 rounded-md border border-primary/15 bg-primary/[0.08] px-2 py-0.5 text-[10px] font-bold leading-4 text-primary transition-colors duration-200 group-hover:border-primary/30 group-hover:bg-primary/15">
                     {{ $badgeLabel }}
                 </span>
             @endif
             @if ($linkTarget === '_blank')
-                <x-heroicon-o-arrow-top-right-on-square class="h-3.5 w-3.5 shrink-0 text-subtle" aria-hidden="true" />
+                <x-heroicon-o-arrow-top-right-on-square
+                    class="h-3.5 w-3.5 shrink-0 text-subtle transition-colors duration-200 group-hover:text-primary"
+                    aria-hidden="true" />
                 <span class="sr-only">(membuka tab baru)</span>
             @endif
         </a>
     @else
         <span @class([
-            'inline-flex min-w-0 max-w-full items-center gap-2.5 text-sm',
+            'inline-flex min-w-0 max-w-full items-center gap-2.5 rounded-lg py-1 text-sm',
             'font-semibold text-primary' => $isActive,
             'font-medium text-foreground' => !$isActive,
         ])>
@@ -75,7 +77,7 @@
             <span class="min-w-0 truncate">{{ $label }}</span>
             @if ($badgeLabel !== '')
                 <span
-                    class="ml-auto shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold leading-4 text-primary">
+                    class="ml-auto shrink-0 rounded-md border border-primary/15 bg-primary/[0.08] px-2 py-0.5 text-[10px] font-bold leading-4 text-primary">
                     {{ $badgeLabel }}
                 </span>
             @endif
