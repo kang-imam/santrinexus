@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#030712">
+    <title>SantriNexus - Offline</title>
+    <style>
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: #030712;
+            color: #f9fafb;
+            font-family: Arial, sans-serif;
+            text-align: center
+        }
+
+        main {
+            max-width: 420px
+        }
+
+        h1 {
+            font-size: 26px
+        }
+
+        p {
+            color: #9ca3af;
+            line-height: 1.7
+        }
+
+        button {
+            padding: 12px 24px;
+            border: 0;
+            border-radius: 10px;
+            background: #6366f1;
+            color: white;
+            font-weight: 600;
+            cursor: pointer
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <h1>Koneksi Terputus</h1>
+        <p>SantriNexus tidak dapat terhubung ke server. Periksa koneksi internet dan coba kembali.</p>
+        <button onclick="location.reload()">Coba Lagi</button>
+    </main>
+</body>
+
+</html>

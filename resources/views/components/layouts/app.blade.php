@@ -19,7 +19,8 @@
         </main>
     </div>
     <x-navigations.footer.index />
+    <x-shared.install-prompt />
+    @stack('scripts')
 </body>
-@stack('scripts')
 
 </html>

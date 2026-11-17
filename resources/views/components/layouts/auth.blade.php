@@ -59,6 +59,7 @@
             }
         }
     </style>
+    <x-shared.install-prompt />
     @stack('scripts')
 </body>
 
