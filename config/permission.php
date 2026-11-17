@@ -5,6 +5,7 @@ use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 return [
+    'default_guard_name' => 'web',
     'models' => [
         'permission' => Permission::class,
         'role' => Role::class,

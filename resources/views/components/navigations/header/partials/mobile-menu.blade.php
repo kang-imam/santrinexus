@@ -5,13 +5,16 @@
     $showActiveState = (bool) config('navigation.settings.show_active_state', true);
     $visibleItems = array_values(
         array_filter($navigation, static function ($item): bool {
-            if (!is_array($item) || ($item['visible'] ?? true) !== true) {
+            if (!is_array($item) || !filter_var($item['visible'] ?? true, FILTER_VALIDATE_BOOLEAN)) {
                 return false;
             }
             $children = $item['children'] ?? [];
             $hasChildren = is_array($children) && count($children) > 0;
             $url = $item['url'] ?? null;
-            return $hasChildren || (($item['navigable'] ?? true) === true && is_string($url) && trim($url) !== '');
+            return $hasChildren ||
+                (filter_var($item['navigable'] ?? true, FILTER_VALIDATE_BOOLEAN) &&
+                    is_string($url) &&
+                    trim($url) !== '');
         }),
     );
 @endphp
@@ -22,8 +25,8 @@
                 ? array_values(
                     array_filter($item['children'], static function ($child): bool {
                         return is_array($child) &&
-                            ($child['visible'] ?? true) === true &&
-                            ($child['navigable'] ?? true) === true &&
+                            filter_var($child['visible'] ?? true, FILTER_VALIDATE_BOOLEAN) &&
+                            filter_var($child['navigable'] ?? true, FILTER_VALIDATE_BOOLEAN) &&
                             is_string($child['url'] ?? null) &&
                             trim($child['url']) !== '' &&
                             is_string($child['label'] ?? null) &&
@@ -34,27 +37,63 @@
             $hasChildren = $children !== [];
             $isActive =
                 (bool) ($item['active'] ?? false) ||
-                collect($children)->contains(static fn($child): bool => (bool) ($child['active'] ?? false));
+                collect($children)->contains(static fn(array $child): bool => (bool) ($child['active'] ?? false));
             $label = is_string($item['label'] ?? null) && trim($item['label']) !== '' ? trim($item['label']) : 'Menu';
             $icon = $item['icon'] ?? null;
             $fallbackIcon = $item['icon_fallback'] ?? 'fa-solid fa-link';
             $submenuId = 'mobile-submenu-' . \Illuminate\Support\Str::uuid();
+            $containerClasses =
+                $isActive && $showActiveState
+                    ? 'border-primary/25 bg-primary/4 shadow-sm shadow-primary/5'
+                    : 'border-border/80 bg-surface/70';
+            $triggerTextClasses = $isActive && $showActiveState ? 'text-primary' : 'text-foreground';
+            $iconWrapperClasses =
+                $isActive && $showActiveState
+                    ? 'bg-primary/10 text-primary'
+                    : 'bg-surface-raised text-muted group-hover:text-primary';
         @endphp
         @if ($hasChildren)
-            <div x-data="{ open: @js($isActive), toggle() { this.open = !this.open; }, close() { this.open = false; }, moveFocus(direction) { const items = this.$refs.panel?.querySelectorAll('a[href]:not([aria-disabled=true])'); if (!items?.length) return; const current = Array.from(items).indexOf(document.activeElement); const next = current < 0 ? 0 : (current + direction + items.length) % items.length;
-                    items[next].focus(); }, focusItem(position) { const items = this.$refs.panel?.querySelectorAll('a[href]:not([aria-disabled=true])'); if (!items?.length) return;
-                    items[position === 'last' ? items.length - 1 : 0].focus(); } }" @keydown.escape.stop="close(); $refs.trigger.focus()"
+            <div x-data="{
+                open: @js($isActive),
+                getItems() {
+                    return Array.from(this.$refs.panel?.querySelectorAll('a[href]:not([aria-disabled=true]):not([tabindex=\'-1\'])') ?? [])
+                        .filter(item => item.getClientRects().length > 0 && !item.closest('[inert]'));
+                },
+                toggle() {
+                    this.open = !this.open;
+                },
+                close(restoreFocus = false) {
+                    this.open = false;
+                    if (restoreFocus) this.$nextTick(() => this.$refs.trigger?.focus());
+                },
+                moveFocus(direction) {
+                    const items = this.getItems();
+                    if (!items.length) return;
+                    const current = items.indexOf(document.activeElement);
+                    const next = current < 0 ?
+                        (direction > 0 ? 0 : items.length - 1) :
+                        (current + direction + items.length) % items.length;
+                    items[next].focus();
+                },
+                focusItem(position) {
+                    const items = this.getItems();
+                    if (!items.length) return;
+                    (position === 'last' ? items[items.length - 1] : items[0])
+                    .focus();
+                }
+            }" @keydown.escape.stop="if (open) close(true)"
                 @keydown.arrow-down.prevent="if (open) moveFocus(1); else { open = true; $nextTick(() => focusItem('first')); }"
                 @keydown.arrow-up.prevent="if (open) moveFocus(-1); else { open = true; $nextTick(() => focusItem('last')); }"
                 @keydown.home.prevent="if (open) focusItem('first')" @keydown.end.prevent="if (open) focusItem('last')"
-                class="overflow-hidden rounded-2xl border {{ $isActive && $showActiveState ? 'border-primary/25 bg-primary/4 shadow-sm shadow-primary/5' : 'border-border/80 bg-surface/70' }} transition-colors duration-200">
+                class="overflow-hidden rounded-2xl border {{ $containerClasses }} transition-colors duration-200">
                 <button x-ref="trigger" type="button" @click="toggle()" :aria-expanded="open.toString()"
                     aria-controls="{{ $submenuId }}"
-                    class="group flex min-h-14 w-full items-center gap-3 px-3.5 py-3.5 text-left text-sm font-semibold transition-colors duration-200 hover:bg-surface-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary {{ $isActive && $showActiveState ? 'text-primary' : 'text-foreground' }}">
+                    class="group flex min-h-14 w-full min-w-0 items-center gap-3 px-3.5 py-3.5 text-left text-sm font-semibold transition-colors duration-200 hover:bg-surface-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary {{ $triggerTextClasses }}">
                     @if ($showIcons)
-                        <x-shared.icon :name="$icon" :fallback="$fallbackIcon"
-                            class="flex size-9 shrink-0 items-center justify-center rounded-xl {{ $isActive && $showActiveState ? 'bg-primary/10 text-primary' : 'bg-surface-raised text-muted group-hover:text-primary' }}"
-                            aria-hidden="true" />
+                        <span
+                            class="flex size-9 shrink-0 items-center justify-center rounded-xl {{ $iconWrapperClasses }}">
+                            <x-shared.icon :name="$icon" :fallback="$fallbackIcon" class="size-4" aria-hidden="true" />
+                        </span>
                     @endif
                     <span class="min-w-0 flex-1 truncate">{{ $label }}</span>
                     @if ($isActive && $showActiveState)
@@ -82,10 +121,9 @@
                 </div>
             </div>
         @else
-            <div
-                class="overflow-hidden rounded-2xl border {{ $isActive && $showActiveState ? 'border-primary/25 bg-primary/4 shadow-sm shadow-primary/5' : 'border-border/80 bg-surface/70' }} transition-colors duration-200">
+            <div class="overflow-hidden rounded-2xl border {{ $containerClasses }} transition-colors duration-200">
                 <x-navigations.header.partials.menu-item :item="$item" variant="mobile"
-                    class="min-h-14 rounded-2xl px-3.5 py-3.5" />
+                    class="min-h-14 w-full rounded-2xl px-3.5 py-3.5" />
             </div>
         @endif
     @empty

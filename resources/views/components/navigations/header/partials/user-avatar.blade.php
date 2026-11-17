@@ -7,14 +7,15 @@
     'alt' => null,
 ])
 @php
-    $user = $user ?? auth()->user();
+    $user = is_object($user) ? $user : auth()->user();
     $name = is_string($user?->name) ? trim($user->name) : 'Pengguna';
     $name = $name !== '' ? $name : 'Pengguna';
     $words = preg_split('/\s+/u', $name, -1, PREG_SPLIT_NO_EMPTY) ?: [];
     $initials = collect($words)
         ->take(2)
-        ->map(fn(string $word): string => mb_strtoupper(mb_substr($word, 0, 1)))
+        ->map(static fn(string $word): string => mb_strtoupper(mb_substr($word, 0, 1)))
         ->implode('');
+    $initials = $initials !== '' ? $initials : 'U';
     $avatar = $user?->avatar_url;
     $avatar = is_string($avatar) ? trim($avatar) : null;
     $avatarScheme = strtolower((string) parse_url($avatar ?? '', PHP_URL_SCHEME));
@@ -28,7 +29,7 @@
         is_string($avatar) &&
         str_starts_with($avatar, '/') &&
         !str_starts_with($avatar, '//') &&
-        !preg_match('/[\r\n]/', $avatar) &&
+        !preg_match('/[\x00-\x1F\x7F\\\\]/', $avatar) &&
         !preg_match('/^[a-z][a-z0-9+.-]*:/i', $avatar);
     $avatar = $isAbsoluteUrl || $isLocalPath ? $avatar : null;
     $sizes = [
@@ -44,6 +45,8 @@
         'rounded' => 'rounded-2xl',
         'square' => 'rounded-lg',
     ];
+    $size = is_string($size) ? $size : 'md';
+    $shape = is_string($shape) ? $shape : 'circle';
     [$avatarSize, $textSize, $statusSize, $dimension] = $sizes[$size] ?? $sizes['md'];
     $avatarShape = $shapes[$shape] ?? $shapes['circle'];
     $statusColors = [
@@ -54,10 +57,20 @@
     ];
     $status = is_string($status) ? strtolower(trim($status)) : null;
     $statusColor = $statusColors[$status] ?? null;
-    $showStatus = (bool) $showStatus && $statusColor !== null;
+    $showStatus = filter_var($showStatus, FILTER_VALIDATE_BOOLEAN) && $statusColor !== null;
     $imageAlt = is_string($alt) && trim($alt) !== '' ? trim($alt) : 'Foto profil ' . $name;
-    $fallbackClasses = "{$avatarSize} {$avatarShape} inline-flex items-center justify-center border border-primary/25 bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/10 {$textSize} font-bold tracking-wide text-primary shadow-sm shadow-primary/5 ring-2 ring-primary/5";
-    $imageClasses = "{$avatarSize} {$avatarShape} border border-border/80 bg-surface object-cover shadow-sm shadow-black/10 ring-2 ring-transparent transition-all duration-200 group-hover/avatar:border-primary/40 group-hover/avatar:ring-primary/10";
+    $fallbackClasses = implode(' ', [
+        $avatarSize,
+        $avatarShape,
+        'inline-flex items-center justify-center border border-primary/25 bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/10',
+        $textSize,
+        'font-bold tracking-wide text-primary shadow-sm shadow-primary/5 ring-2 ring-primary/5',
+    ]);
+    $imageClasses = implode(' ', [
+        $avatarSize,
+        $avatarShape,
+        'border border-border/80 bg-surface object-cover shadow-sm shadow-black/10 ring-2 ring-transparent transition-all duration-200 group-hover/avatar:border-primary/40 group-hover/avatar:ring-primary/10',
+    ]);
 @endphp
 <span x-data="{ imageFailed: false }" {{ $attributes->class(['group/avatar relative inline-flex shrink-0 align-middle']) }}
     @if ($showStatus) data-status="{{ $status }}" @endif>
@@ -66,13 +79,10 @@
             loading="lazy" decoding="async" referrerpolicy="no-referrer" x-show="!imageFailed"
             x-on:error="imageFailed = true" class="{{ $imageClasses }}">
         <span x-cloak x-show="imageFailed" role="img" aria-label="Avatar {{ $name }}"
-            class="{{ $fallbackClasses }}">
-            {{ $initials ?: 'U' }}
-        </span>
+            class="{{ $fallbackClasses }}">{{ $initials }}</span>
     @else
-        <span role="img" aria-label="Avatar {{ $name }}" class="{{ $fallbackClasses }}">
-            {{ $initials ?: 'U' }}
-        </span>
+        <span role="img" aria-label="Avatar {{ $name }}"
+            class="{{ $fallbackClasses }}">{{ $initials }}</span>
     @endif
     @if ($showStatus)
         <span

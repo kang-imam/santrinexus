@@ -1,32 +1,36 @@
-@props(['item' => [], 'variant' => 'desktop'])
+@props([
+    'item' => [],
+    'variant' => 'desktop',
+])
 @php
     $item = is_array($item) ? $item : [];
-    $label = is_string($item['label'] ?? null) ? $item['label'] : '';
+    $label = is_string($item['label'] ?? null) ? trim($item['label']) : '';
     $url = is_string($item['url'] ?? null) ? trim($item['url']) : '';
     $icon = $item['icon'] ?? null;
     $iconFallback = $item['icon_fallback'] ?? null;
     $badge = $item['badge'] ?? null;
-    $target = is_string($item['target'] ?? null) ? $item['target'] : null;
-    $rel = is_string($item['rel'] ?? null) ? $item['rel'] : '';
+    $target = is_string($item['target'] ?? null) ? trim($item['target']) : '';
+    $rel = is_string($item['rel'] ?? null) ? trim($item['rel']) : '';
     $isActive = (bool) ($item['active'] ?? false);
-    $isNavigable = (bool) ($item['navigable'] ?? true);
+    $isNavigable = filter_var($item['navigable'] ?? true, FILTER_VALIDATE_BOOLEAN);
     $showIcons = (bool) config('navigation.settings.show_icons', true);
     $showActiveState = (bool) config('navigation.settings.show_active_state', true);
     $showBadge = (bool) config('navigation.settings.show_badges', true);
-    $variant = in_array($variant, ['desktop', 'dropdown', 'mobile'], true) ? $variant : 'desktop';
+    $variant =
+        is_string($variant) && in_array($variant, ['desktop', 'dropdown', 'mobile'], true) ? $variant : 'desktop';
     $variants = [
         'desktop' => 'min-h-10 px-3 py-2',
         'dropdown' => 'min-h-11 w-full px-3 py-2.5',
         'mobile' => 'min-h-12 w-full px-3.5 py-3',
     ];
     $baseClasses =
-        'group relative flex items-center gap-3 overflow-hidden rounded-xl text-sm font-medium transition-colors duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
+        'group relative flex min-w-0 items-center gap-3 rounded-xl text-sm font-medium transition-colors duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
     $stateClasses =
         $isActive && $showActiveState
             ? 'bg-primary/10 text-primary shadow-sm shadow-primary/5'
             : 'text-muted hover:bg-surface-hover hover:text-foreground';
     $classes = implode(' ', [$baseClasses, $variants[$variant], $stateClasses]);
-    $relValues = preg_split('/\s+/', trim($rel), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+    $relValues = preg_split('/\s+/', $rel, -1, PREG_SPLIT_NO_EMPTY) ?: [];
     if ($target === '_blank') {
         $relValues = array_merge($relValues, ['noopener', 'noreferrer']);
     }
@@ -36,13 +40,12 @@
         ((is_string($icon) && trim($icon) !== '') || (is_string($iconFallback) && trim($iconFallback) !== ''));
     $hasBadge = $showBadge && ((is_string($badge) && trim($badge) !== '') || is_numeric($badge));
     $isLink = $url !== '' && $isNavigable;
-    $attributes = $attributes->merge(['class' => $classes]);
+    $attributes = $attributes->class([$classes]);
 @endphp
 @if ($isLink)
-    <a href="{{ $url }}" @if ($target) target="{{ $target }}" @endif
+    <a href="{{ $url }}" @if ($target !== '') target="{{ $target }}" @endif
         @if ($rel !== '') rel="{{ $rel }}" @endif
-        @if ($isActive && $showActiveState) aria-current="page" @endif
-        @if ($label !== '') aria-label="{{ $label }}" @endif {{ $attributes }}>
+        @if ($isActive && $showActiveState) aria-current="page" @endif {{ $attributes }}>
         @if ($isActive && $showActiveState)
             <span class="absolute inset-y-2 left-0 w-0.5 rounded-full bg-primary" aria-hidden="true"></span>
         @endif

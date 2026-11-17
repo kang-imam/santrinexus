@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Web\Auth\GoogleAuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -9,6 +10,10 @@ Route::middleware('guest')->group(function () {
     Route::view('/reset-password/{token}', 'auth.reset-password')->name('password.reset');
     Route::view('/magic-link', 'auth.magic-link')->name('magic-link');
     Route::view('/accept-invitation/{token}', 'auth.accept-invitation')->name('invitation.accept');
+    Route::prefix('auth/google')->name('auth.google.')->controller(GoogleAuthController::class)->group(function () {
+        Route::get('/', 'redirect')->name('redirect');
+        Route::get('/callback', 'callback')->name('callback');
+    });
 });
 Route::middleware('auth')->group(function () {
     Route::view('/verify-email', 'auth.verify-email')->name('verification.notice');
