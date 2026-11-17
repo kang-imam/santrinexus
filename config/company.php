@@ -1,17 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'name' => 'SantriNexus',
     'legal_name' => 'PT SANTRI NEXUS NUSANTARA',
     'short_name' => 'SantriNexus',
     'founded_year' => 2026,
     'url' => env('APP_URL', 'https://santrinexus.id'),
+    'locale' => 'id',
+    'timezone' => 'Asia/Jakarta',
+    'currency' => 'IDR',
     'brand' => [
         'name' => 'SantriNexus',
         'first_name' => 'Santri',
         'second_name' => 'Nexus',
         'tagline' => 'Core Digital Infrastructure and Technology Ecosystem',
         'short_tagline' => 'Core Digital Ecosystem',
+        'description' => 'Ekosistem infrastruktur digital dan teknologi terintegrasi.',
         'philosophy' => [
             'santri' => 'Santri merepresentasikan komunitas keilmuan, pendidikan pesantren, integritas, pembelajaran, serta nilai-nilai luhur yang menjadi landasan dalam membangun peradaban.',
             'nexus' => 'Nexus merepresentasikan konektivitas, integrasi, kolaborasi, dan pusat penghubung yang menyatukan berbagai individu, institusi, organisasi, serta potensi.',
@@ -21,6 +27,10 @@ return [
             'primary_color' => '#22D3EE',
             'secondary_color' => '#38BDF8',
             'accent_color' => '#A3E635',
+            'background_color' => '#0B1120',
+            'surface_color' => '#111827',
+            'text_color' => '#F8FAFC',
+            'muted_color' => '#94A3B8',
             'font_family' => 'Inter',
             'visual_style' => 'Modern, Minimalist, Futuristic, Professional',
         ],
@@ -28,9 +38,13 @@ return [
             'primary' => 'logo_santrinexus.svg',
             'primary_path' => 'public/logo_santrinexus.svg',
             'secondary' => 'logo_santrinexus.svg',
+            'secondary_path' => 'public/logo_santrinexus.svg',
             'icon' => 'logo_santrinexus.svg',
-            'favicon' => 'favicon.ico',
+            'icon_path' => 'public/logo_santrinexus.svg',
+            'favicon' => 'logo_santrinexus.svg',
+            'favicon_path' => 'public/logo_santrinexus.svg',
             'directory' => 'public',
+            'alt' => 'Logo SantriNexus',
         ],
     ],
     'description' => 'SantriNexus adalah ekosistem infrastruktur digital dan teknologi yang dikembangkan untuk menghadirkan solusi, platform, produk, dan layanan teknologi terintegrasi guna mendukung konektivitas, inovasi, kolaborasi, serta transformasi digital.',
@@ -93,10 +107,28 @@ return [
             'Professionalism',
             'Sustainability',
         ],
+        'milestones' => [
+            [
+                'year' => 2026,
+                'title' => 'Pendirian SantriNexus',
+                'description' => 'Awal pengembangan ekosistem infrastruktur digital dan teknologi SantriNexus.',
+                'is_sample' => false,
+            ],
+        ],
     ],
     'products' => [
         'description' => 'Kumpulan platform, produk, dan layanan digital yang dikembangkan dan dikelola dalam ekosistem SantriNexus.',
-        'catalog' => [],
+        'catalog' => [
+            [
+                'name' => 'Contoh Produk Digital',
+                'slug' => 'contoh-produk-digital',
+                'description' => 'Data contoh katalog produk yang dapat diganti dengan produk resmi SantriNexus.',
+                'category' => 'Digital Platforms',
+                'status' => 'development',
+                'url' => '',
+                'is_sample' => true,
+            ],
+        ],
         'categories' => [
             'Digital Platforms',
             'Educational Technology',
@@ -121,6 +153,9 @@ return [
             'partnership' => 'partnership@santrinexus.id',
             'support' => 'support@santrinexus.id',
             'legal' => 'legal@santrinexus.id',
+            'sales' => 'BELUM_DIISI',
+            'careers' => 'BELUM_DIISI',
+            'press' => 'BELUM_DIISI',
         ],
         'phone' => [
             'local' => '0851-9552-0850',
@@ -176,9 +211,9 @@ return [
                 ],
                 'friday' => [
                     'label' => 'Jumat',
-                    'open' => '08:00',
-                    'close' => '17:00',
-                    'closed' => false,
+                    'open' => '00:00',
+                    'close' => '00:00',
+                    'closed' => true,
                 ],
                 'saturday' => [
                     'label' => 'Sabtu',
@@ -187,48 +222,24 @@ return [
                     'closed' => false,
                 ],
                 'sunday' => [
-                    'label' => 'Minggu',
-                    'open' => '00:00',
-                    'close' => '00:00',
-                    'closed' => true,
+                    'label' => 'Ahad',
+                    'open' => '08:00',
+                    'close' => '17:00',
+                    'closed' => false,
                 ],
             ],
             'holiday_note' => 'Jam operasional dapat berubah pada hari libur nasional dan hari besar lainnya.',
         ],
     ],
     'socials' => [
-        'instagram' => [
-            'username' => '@santrinexus',
-            'url' => 'https://instagram.com/santrinexus',
-        ],
-        'facebook' => [
-            'username' => 'santrinexus',
-            'url' => 'https://facebook.com/santrinexus',
-        ],
-        'linkedin' => [
-            'username' => 'santrinexus',
-            'url' => 'https://linkedin.com/company/santrinexus',
-        ],
-        'youtube' => [
-            'username' => '@santrinexus',
-            'url' => 'https://youtube.com/@santrinexus',
-        ],
-        'tiktok' => [
-            'username' => '@santrinexus',
-            'url' => 'https://tiktok.com/@santrinexus',
-        ],
-        'github' => [
-            'username' => 'santrinexus',
-            'url' => 'https://github.com/santrinexus',
-        ],
-        'x' => [
-            'username' => '@santrinexus',
-            'url' => 'https://x.com/santrinexus',
-        ],
-        'threads' => [
-            'username' => '@santrinexus',
-            'url' => 'https://threads.net/@santrinexus',
-        ],
+        'instagram' => ['label' => 'Instagram', 'url' => 'https://www.instagram.com/username', 'username' => '@username', 'icon' => 'fab-instagram', 'icon_fallback' => 'fa-brands fa-instagram', 'enabled' => true],
+        'facebook' => ['label' => 'Facebook', 'url' => 'https://www.facebook.com/username', 'username' => 'username', 'icon' => 'fab-facebook-f', 'icon_fallback' => 'fa-brands fa-facebook-f', 'enabled' => true],
+        'linkedin' => ['label' => 'LinkedIn', 'url' => 'https://www.linkedin.com/company/username', 'username' => 'username', 'icon' => 'fab-linkedin-in', 'icon_fallback' => 'fa-brands fa-linkedin-in', 'enabled' => true],
+        'youtube' => ['label' => 'YouTube', 'url' => 'https://www.youtube.com/@username', 'username' => '@username', 'icon' => 'fab-youtube', 'icon_fallback' => 'fa-brands fa-youtube', 'enabled' => true],
+        'tiktok' => ['label' => 'TikTok', 'url' => 'https://www.tiktok.com/@username', 'username' => '@username', 'icon' => 'fab-tiktok', 'icon_fallback' => 'fa-brands fa-tiktok', 'enabled' => true],
+        'github' => ['label' => 'GitHub', 'url' => 'https://github.com/username', 'username' => 'username', 'icon' => 'fab-github', 'icon_fallback' => 'fa-brands fa-github', 'enabled' => true],
+        'x' => ['label' => 'X', 'url' => 'https://x.com/username', 'username' => '@username', 'icon' => 'fab-x-twitter', 'icon_fallback' => 'fa-brands fa-x-twitter', 'enabled' => true],
+        'threads' => ['label' => 'Threads', 'url' => 'https://www.threads.net/@username', 'username' => '@username', 'icon' => 'fab-threads', 'icon_fallback' => 'fa-brands fa-threads', 'enabled' => true],
     ],
     'legal' => [
         'company_registration_number' => 'AHU-A135749.AH.01.30.TAHUN 2026',
@@ -246,8 +257,15 @@ return [
             'data_processing' => 'legal.data-processing-policy',
             'accessibility' => 'legal.accessibility-statement',
         ],
+        'effective_date' => 'BELUM_DIISI',
+        'last_updated' => 'BELUM_DIISI',
+        'jurisdiction' => 'Indonesia',
+        'governing_law' => 'Hukum Republik Indonesia',
     ],
     'seo' => [
+        'title' => 'SantriNexus - Core Digital Infrastructure and Technology Ecosystem',
+        'title_separator' => ' | ',
+        'description' => 'SantriNexus menghadirkan ekosistem infrastruktur digital, pengembangan perangkat lunak, platform teknologi, integrasi sistem, dan solusi transformasi digital.',
         'keywords' => [
             'SantriNexus',
             'PT SANTRI NEXUS NUSANTARA',
@@ -266,5 +284,21 @@ return [
             'Technology Innovation',
             'Pesantren Digital',
         ],
+        'author' => 'SantriNexus',
+        'publisher' => 'PT SANTRI NEXUS NUSANTARA',
+        'robots' => 'index, follow',
+        'canonical' => env('APP_URL', 'https://santrinexus.id'),
+        'image' => 'logo_santrinexus.svg',
+        'locale' => 'id_ID',
+        'type' => 'website',
+    ],
+    'metadata' => [
+        'copyright' => '© '.date('Y').' SantriNexus. All rights reserved.',
+        'copyright_holder' => 'PT SANTRI NEXUS NUSANTARA',
+        'language' => 'Bahasa Indonesia',
+        'country' => 'Indonesia',
+        'support_email' => 'support@santrinexus.id',
+        'status' => 'operational',
+        'is_sample' => false,
     ],
 ];

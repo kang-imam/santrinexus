@@ -1,4 +1,8 @@
-<footer
+@php
+    $companyName = config('company.brand.name', config('company.name', config('app.name', 'SantriNexus')));
+    $footerLabel = 'Footer ' . $companyName;
+@endphp
+<footer aria-label="{{ $footerLabel }}"
     class="relative isolate mt-auto overflow-hidden border-t border-white/[0.08] bg-gradient-to-b from-surface via-background to-background">
     <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
         <div class="absolute -left-40 -top-48 h-[28rem] w-[28rem] rounded-full bg-cyan-dark/[0.12] blur-[120px]"></div>

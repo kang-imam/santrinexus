@@ -49,13 +49,6 @@ Route::prefix('legal')->name('legal.')->group(function () {
     Route::view('/terms-of-service', 'pages.legal.terms-of-service.index')->name('terms-of-service');
     Route::view('/cookie-policy', 'pages.legal.cookie-policy.index')->name('cookie-policy');
 });
-Route::prefix('errors')->name('errors.')->group(function () {
-    Route::view('/403', 'pages.errors.403.index')->name('403');
-    Route::view('/404', 'pages.errors.404.index')->name('404');
-    Route::view('/419', 'pages.errors.419.index')->name('419');
-    Route::view('/429', 'pages.errors.429.index')->name('429');
-    Route::view('/500', 'pages.errors.500.index')->name('500');
-});
 Route::fallback(function () {
-    return response()->view('pages.errors.404.index', [], 404);
+    abort(404);
 });

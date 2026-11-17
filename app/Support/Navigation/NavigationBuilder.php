@@ -1,105 +1,434 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Support\Navigation;
 
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Throwable;
 
 class NavigationBuilder
 {
-    protected array $groups = [
-        'header',
-        'footer',
-        'account',
-        'auth',
-        'notifications',
-        'content',
-        'contact',
-        'newsletter',
-        'cookies',
-        'invitation',
-        'system',
-        'legal',
-    ];
+    protected array $defaults = [];
 
-    public function get(string $group): array
+    protected array $settings = [];
+
+    protected array $navigation = [];
+
+    protected int $maximumDepth = 10;
+
+    public function __construct()
     {
-        if (! in_array($group, $this->groups, true)) {
-            return [];
-        }
-        $items = config("navigation.{$group}", []);
-        if (! is_array($items) || $items === []) {
-            return [];
-        }
-        if (array_is_list($items)) {
-            $result = $this->processItems($items, $group);
-            if ($group === 'footer') {
-                return $this->processFooter($result);
-            }
-            if ($group === 'header') {
-                return $this->limitHeaderItems($result);
-            }
+        $navigation = config('navigation', []);
+        $this->navigation = is_array($navigation) ? $navigation : [];
+        $defaults = $this->navigation['defaults'] ?? [];
+        $settings = $this->navigation['settings'] ?? [];
+        $this->defaults = is_array($defaults) ? $defaults : [];
+        $this->settings = is_array($settings) ? $settings : [];
+        $this->maximumDepth = max(1, min(20, (int) ($this->settings['maximum_depth'] ?? 10)));
+    }
 
-            return $result;
+    public function build(string $section, array $context = []): array
+    {
+        $items = $this->navigation[$section] ?? [];
+        if (! is_array($items)) {
+            return [];
         }
-        $result = [];
-        $remaining = max(0, (int) config('navigation.settings.footer_max_items', 0));
-        $headerRoutes = $group === 'footer' ? $this->getHeaderRoutes() : [];
-        foreach ($items as $label => $children) {
-            if (! is_array($children)) {
+
+        return $this->resolveItems($items, $context);
+    }
+
+    public function all(array $context = []): array
+    {
+        $sections = [];
+        foreach ($this->navigation as $section => $items) {
+            if (in_array($section, ['defaults', 'settings'], true) || ! is_array($items)) {
                 continue;
             }
-            $processed = $this->processItems($children, $group);
-            if ($group === 'footer') {
-                $processed = $this->removeDuplicateRoutes($processed, $headerRoutes);
-                if ($remaining > 0) {
-                    $processed = $this->limitItems($processed, $remaining);
+            $sections[$section] = $this->resolveItems($items, $context);
+        }
+
+        return $sections;
+    }
+
+    public function get(string $section, string $label, array $context = []): ?array
+    {
+        return $this->findByLabel($this->build($section, $context), trim($label));
+    }
+
+    public function findByRoute(string $section, string $route, array $context = []): ?array
+    {
+        return $this->findByKey($this->build($section, $context), 'route', trim($route));
+    }
+
+    public function url(string $route, array $parameters = [], ?string $fallback = null): ?string
+    {
+        if (trim($route) === '' || ! $this->routeExists($route)) {
+            return $fallback;
+        }
+        if (! $this->hasRequiredParameters($this->getRequiredRouteParameters($route), $parameters)) {
+            return $fallback;
+        }
+        try {
+            return route($route, $parameters);
+        } catch (Throwable) {
+            return $fallback;
+        }
+    }
+
+    public function routeExists(?string $route): bool
+    {
+        if (! is_string($route) || trim($route) === '') {
+            return false;
+        }
+        if (! ($this->settings['check_route_exists'] ?? true)) {
+            return true;
+        }
+
+        return Route::has($route);
+    }
+
+    public function canAccess(array $item): bool
+    {
+        if (! $this->passesAuthentication($item['auth'] ?? null)) {
+            return false;
+        }
+        if (! $this->passesPermissions($item)) {
+            return false;
+        }
+        $ability = $item['can'] ?? null;
+        if (is_string($ability) && trim($ability) !== '') {
+            $arguments = $item['can_parameters'] ?? [];
+            $arguments = is_array($arguments) ? $arguments : [$arguments];
+            try {
+                if (! Gate::check($ability, $arguments)) {
+                    return false;
                 }
+            } catch (Throwable) {
+                return false;
             }
-            if ($processed === []) {
+        }
+
+        return true;
+    }
+
+    public function isActive(array $item): bool
+    {
+        if (! ($item['active'] ?? true)) {
+            return false;
+        }
+        $route = $item['route'] ?? null;
+        if (is_string($route) && trim($route) !== '' && request()->routeIs($route)) {
+            return true;
+        }
+        $url = $item['url'] ?? null;
+        if (! is_string($url) || trim($url) === '' || $this->isExternalUrl($url)) {
+            return false;
+        }
+        $targetPath = trim((string) parse_url($url, PHP_URL_PATH), '/');
+        $currentPath = trim(request()->path(), '/');
+        if ($targetPath === '') {
+            return $currentPath === '';
+        }
+
+        return $currentPath === $targetPath || str_starts_with($currentPath, $targetPath.'/');
+    }
+
+    public function isExternalUrl(?string $url): bool
+    {
+        if (! is_string($url) || trim($url) === '') {
+            return false;
+        }
+        $url = trim($url);
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+        if (in_array($scheme, ['mailto', 'tel', 'sms'], true)) {
+            return true;
+        }
+        $host = parse_url($url, PHP_URL_HOST);
+        if (! is_string($host) || $host === '') {
+            return $scheme !== '' || str_starts_with($url, '//');
+        }
+
+        return strtolower(rtrim($host, '.')) !== strtolower(rtrim(request()->getHost(), '.'));
+    }
+
+    protected function resolveItems(array $items, array $context = [], int $depth = 0): array
+    {
+        if ($depth >= $this->maximumDepth) {
+            return [];
+        }
+        $resolved = [];
+        foreach ($items as $item) {
+            if (! is_array($item)) {
                 continue;
             }
-            $result[] = [
-                'label' => (string) $label,
-                'items' => $processed,
-            ];
+            $item = array_replace($this->defaults, $item);
+            if (! filter_var($item['visible'] ?? true, FILTER_VALIDATE_BOOLEAN)) {
+                continue;
+            }
+            if (! $this->canAccess($item)) {
+                continue;
+            }
+            $children = $item['children'] ?? [];
+            $item['children'] = is_array($children)
+                ? $this->resolveItems($children, $context, $depth + 1)
+                : [];
+            $item = $this->resolveItem($item, $context);
+            if ($item === null) {
+                continue;
+            }
+            if ($item['children'] !== []) {
+                $childIsActive = collect($item['children'])->contains(
+                    fn (array $child): bool => (bool) ($child['active'] ?? false)
+                );
+                $item['active'] = $item['active'] || $childIsActive;
+            }
+            if ($item['children'] === [] && empty($item['url'])) {
+                continue;
+            }
+            $resolved[] = $item;
         }
 
-        return $result;
+        return array_values($resolved);
     }
 
-    public function all(): array
+    protected function resolveItem(array $item, array $context = []): ?array
     {
-        $result = [];
-        foreach ($this->groups as $group) {
-            $result[$group] = $this->get($group);
+        $routeName = $item['route'] ?? null;
+        $routeName = is_string($routeName) ? trim($routeName) : null;
+        $itemParameters = $item['parameters'] ?? [];
+        $contextParameters = $context['parameters'] ?? [];
+        $parameters = array_replace(
+            is_array($itemParameters) ? $itemParameters : [],
+            is_array($contextParameters) ? $contextParameters : []
+        );
+        $requiredParameters = $item['requires_parameters'] ?? [];
+        $requiredParameters = is_array($requiredParameters) ? $requiredParameters : [];
+        $routeExists = $routeName !== null && $routeName !== ''
+            ? $this->routeExists($routeName)
+            : false;
+        if ($routeName !== null && $routeName !== '' && ! $routeExists) {
+            return null;
+        }
+        $routeParameters = $routeExists
+            ? $this->getRequiredRouteParameters($routeName)
+            : [];
+        $requiredParameters = array_values(array_unique(array_merge(
+            $requiredParameters,
+            $routeParameters
+        )));
+        $hasParameters = $this->hasRequiredParameters($requiredParameters, $parameters);
+        $url = null;
+        if ($routeName !== null && $routeName !== '' && $routeExists && $hasParameters) {
+            $fallback = $this->resolveUrlTemplate($item['url'] ?? null, $parameters);
+            $url = $this->url($routeName, $parameters, $fallback);
+        } elseif ($routeName === null || $routeName === '') {
+            $url = $this->resolveUrlTemplate($item['url'] ?? null, $parameters);
+            $hasParameters = $url !== null;
+        }
+        $method = strtoupper(trim((string) ($item['method'] ?? 'GET')));
+        $external = $this->isExternalUrl($url);
+        $navigable = (bool) ($item['navigable'] ?? true)
+            && in_array($method, ['GET', 'HEAD'], true)
+            && is_string($url)
+            && $url !== ''
+            && $hasParameters;
+        $defaultTarget = $this->defaults['target'] ?? '_self';
+        $target = $item['target'] ?? $defaultTarget;
+        $allowedTargets = ['_self', '_blank', '_parent', '_top'];
+        $target = is_string($target) && in_array($target, $allowedTargets, true)
+            ? $target
+            : '_self';
+        $item['parameters'] = $parameters;
+        $item['url'] = $url;
+        $item['route_exists'] = $routeName !== null && $routeName !== ''
+            ? $routeExists
+            : null;
+        $item['parameters_resolved'] = $hasParameters;
+        $item['method'] = $method;
+        $item['is_external'] = $external;
+        $item['target'] = $external && $target === $defaultTarget
+            ? ($this->settings['external_link_target'] ?? '_blank')
+            : $target;
+        $item['rel'] = $external
+            ? ($this->settings['external_link_rel'] ?? 'noopener noreferrer')
+            : ($item['rel'] ?? null);
+        $item['navigable'] = $navigable;
+        $item['active'] = (bool) ($this->settings['show_active_state'] ?? true)
+            && $this->isActive($item);
+        $showIcons = (bool) ($this->settings['show_icons'] ?? true);
+        $item['icon'] = $showIcons ? ($item['icon'] ?? null) : null;
+        $item['icon_fallback'] = $showIcons ? ($item['icon_fallback'] ?? null) : null;
+        $item['description'] = (bool) ($this->settings['show_descriptions'] ?? true)
+            ? ($item['description'] ?? null)
+            : null;
+        $item['badge'] = (bool) ($this->settings['show_badges'] ?? true)
+            ? ($item['badge'] ?? null)
+            : null;
+
+        return $item;
+    }
+
+    protected function getRequiredRouteParameters(string $route): array
+    {
+        try {
+            $registeredRoute = Route::getRoutes()->getByName($route);
+            if (! $registeredRoute) {
+                return [];
+            }
+            preg_match_all('/\{([^}?]+)(\?)?\}/', $registeredRoute->uri(), $matches, PREG_SET_ORDER);
+            $parameters = [];
+            foreach ($matches as $match) {
+                if (($match[2] ?? '') === '?') {
+                    continue;
+                }
+                $parameters[] = $match[1];
+            }
+
+            return array_values(array_unique($parameters));
+        } catch (Throwable) {
+            return [];
+        }
+    }
+
+    protected function hasRequiredParameters(array $required, array $parameters): bool
+    {
+        foreach ($required as $parameter) {
+            if (! is_string($parameter) || ! array_key_exists($parameter, $parameters)) {
+                return false;
+            }
+            if ($parameters[$parameter] === null || $parameters[$parameter] === '') {
+                return false;
+            }
         }
 
-        return $result;
+        return true;
     }
 
-    public function find(string $group, string $key): ?array
+    protected function resolveUrlTemplate(mixed $url, array $parameters = []): ?string
     {
-        if ($key === '') {
+        if (! is_string($url) || trim($url) === '') {
+            return null;
+        }
+        $url = trim($url);
+        if (preg_match('/[\x00-\x1F\x7F]/', $url) === 1 || str_contains($url, '\\')) {
+            return null;
+        }
+        if (! str_contains($url, '{')) {
+            return $this->isAllowedUrl($url) ? $url : null;
+        }
+        $resolved = preg_replace_callback(
+            '/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/',
+            function (array $matches) use ($parameters): string {
+                $key = $matches[1];
+                if (! array_key_exists($key, $parameters) || $parameters[$key] === null || $parameters[$key] === '') {
+                    return $matches[0];
+                }
+
+                return rawurlencode((string) $parameters[$key]);
+            },
+            $url
+        );
+        if (! is_string($resolved) || preg_match('/\{[a-zA-Z_][a-zA-Z0-9_]*\}/', $resolved) === 1) {
             return null;
         }
 
-        return $this->findInItems($this->get($group), $key);
+        return $this->isAllowedUrl($resolved) ? $resolved : null;
     }
 
-    protected function findInItems(array $items, string $key): ?array
+    protected function isAllowedUrl(string $url): bool
+    {
+        if (preg_match('/[\x00-\x1F\x7F]/', $url) === 1 || str_contains($url, '\\')) {
+            return false;
+        }
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+        if ($scheme !== '' && ! in_array($scheme, ['http', 'https', 'mailto', 'tel', 'sms'], true)) {
+            return false;
+        }
+        if (in_array($scheme, ['http', 'https'], true)) {
+            $host = parse_url($url, PHP_URL_HOST);
+
+            return is_string($host) && $host !== '';
+        }
+        if (in_array($scheme, ['mailto', 'tel', 'sms'], true)) {
+            return true;
+        }
+        if (str_starts_with($url, '//')) {
+            $host = parse_url($url, PHP_URL_HOST);
+
+            return is_string($host) && $host !== '';
+        }
+
+        return true;
+    }
+
+    protected function passesAuthentication(mixed $auth): bool
+    {
+        if ($auth === null || $auth === false || $auth === '') {
+            return true;
+        }
+        if ($auth === true || $auth === 'auth') {
+            return Auth::check();
+        }
+        if ($auth === 'guest') {
+            return Auth::guest();
+        }
+        if (is_string($auth)) {
+            try {
+                return Auth::guard($auth)->check();
+            } catch (Throwable) {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    protected function passesPermissions(array $item): bool
+    {
+        if (! ($this->settings['check_permissions'] ?? true)) {
+            return true;
+        }
+        $permissions = $item['permissions'] ?? [];
+        if (is_string($permissions)) {
+            $permissions = [$permissions];
+        }
+        if (! is_array($permissions) || $permissions === []) {
+            return true;
+        }
+        if (! Auth::check()) {
+            return false;
+        }
+        $results = [];
+        foreach ($permissions as $permission) {
+            if (! is_string($permission) || trim($permission) === '') {
+                $results[] = false;
+
+                continue;
+            }
+            try {
+                $results[] = Gate::check(trim($permission));
+            } catch (Throwable) {
+                $results[] = false;
+            }
+        }
+        $mode = ($item['permission_mode'] ?? 'all') === 'any' ? 'any' : 'all';
+
+        return $mode === 'any'
+            ? in_array(true, $results, true)
+            : ! in_array(false, $results, true);
+    }
+
+    protected function findByLabel(array $items, string $label): ?array
     {
         foreach ($items as $item) {
-            if (($item['key'] ?? null) === $key) {
+            if (($item['label'] ?? null) === $label) {
                 return $item;
             }
-            foreach (['items', 'children'] as $childKey) {
-                if (! isset($item[$childKey]) || ! is_array($item[$childKey])) {
-                    continue;
-                }
-                $found = $this->findInItems($item[$childKey], $key);
+            if (! empty($item['children'])) {
+                $found = $this->findByLabel($item['children'], $label);
                 if ($found !== null) {
                     return $found;
                 }
@@ -109,235 +438,20 @@ class NavigationBuilder
         return null;
     }
 
-    protected function processItems(array $items, string $group): array
+    protected function findByKey(array $items, string $key, string $value): ?array
     {
-        $result = [];
         foreach ($items as $item) {
-            if (! is_array($item) || ! $this->isVisible($item, $group)) {
-                continue;
+            if (($item[$key] ?? null) === $value) {
+                return $item;
             }
-            $routeName = isset($item['route']) && is_string($item['route']) ? $item['route'] : null;
-            $children = isset($item['children']) && is_array($item['children'])
-                ? $this->processItems($item['children'], $group)
-                : [];
-            if ($routeName === null && $children === []) {
-                continue;
-            }
-            $url = null;
-            if ($routeName !== null) {
-                $routeExists = Route::has($routeName);
-                if (! $routeExists && config('navigation.settings.filter_missing_routes', true)) {
-                    $routeName = null;
-                    if ($children === []) {
-                        continue;
-                    }
-                } elseif ($routeExists) {
-                    $parameters = $item['parameters'] ?? [];
-                    if (! is_array($parameters)) {
-                        $parameters = [];
-                    }
-                    $hasParameters = $this->hasRequiredParameters($routeName, $parameters);
-                    if (! $hasParameters && config('navigation.settings.hide_dynamic_routes_without_parameters', true)) {
-                        $routeName = null;
-                        if ($children === []) {
-                            continue;
-                        }
-                    } elseif ($hasParameters) {
-                        try {
-                            $url = route($routeName, $parameters);
-                        } catch (Throwable) {
-                            if (config('navigation.settings.hide_dynamic_routes_without_parameters', true)) {
-                                $routeName = null;
-                                if ($children === []) {
-                                    continue;
-                                }
-                            }
-                        }
-                    }
+            if (! empty($item['children'])) {
+                $found = $this->findByKey($item['children'], $key, $value);
+                if ($found !== null) {
+                    return $found;
                 }
             }
-            $active = config('navigation.settings.show_active_state', true)
-                ? $this->isActive($item, $routeName)
-                : false;
-            if (! $active && $children !== []) {
-                $active = collect($children)->contains(fn ($child) => $child['active'] ?? false);
-            }
-            $label = $item['label'] ?? '';
-            $result[] = [
-                'key' => isset($item['key']) && is_string($item['key']) ? $item['key'] : null,
-                'label' => is_scalar($label) ? (string) $label : '',
-                'route' => $routeName,
-                'url' => $url,
-                'icon' => config('navigation.settings.show_icons', true) ? ($item['icon'] ?? null) : null,
-                'active' => $active,
-                'visible' => true,
-                'target' => isset($item['target']) && is_string($item['target']) ? $item['target'] : null,
-                'rel' => isset($item['rel']) && is_string($item['rel']) ? $item['rel'] : null,
-                'badge' => $item['badge'] ?? null,
-                'children' => $children,
-            ];
         }
 
-        return $result;
-    }
-
-    protected function isVisible(array $item, string $group): bool
-    {
-        if (($item['visible'] ?? true) === false) {
-            return false;
-        }
-        if (($item['auth'] ?? false) && ! Auth::check()) {
-            return false;
-        }
-        if (($item['guest'] ?? false) && Auth::check()) {
-            return false;
-        }
-        if (in_array($group, ['account', 'notifications'], true) && ! Auth::check()) {
-            return false;
-        }
-        if (! config('navigation.settings.filter_by_access', true)) {
-            return true;
-        }
-        $user = Auth::user();
-        if (isset($item['permission'])) {
-            if (! ($user instanceof User) || ! is_string($item['permission']) || ! $user->can($item['permission'])) {
-                return false;
-            }
-        }
-        if (isset($item['role'])) {
-            if (! ($user instanceof User) || ! method_exists($user, 'hasAnyRole')) {
-                return false;
-            }
-            $roles = is_array($item['role']) ? $item['role'] : [$item['role']];
-            $roles = array_values(array_filter($roles, fn ($role) => is_string($role) && $role !== ''));
-            if ($roles === [] || ! $user->hasAnyRole($roles)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    protected function hasRequiredParameters(string $routeName, array $parameters): bool
-    {
-        $route = Route::getRoutes()->getByName($routeName);
-        if (! $route) {
-            return false;
-        }
-        preg_match_all('/\{([^}?]+)(\?)?\}/', $route->uri(), $matches, PREG_SET_ORDER);
-        foreach ($matches as $match) {
-            $name = $match[1];
-            $optional = ($match[2] ?? '') === '?';
-            if ($optional) {
-                continue;
-            }
-            if (! array_key_exists($name, $parameters) || $parameters[$name] === null || $parameters[$name] === '') {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    protected function isActive(array $item, ?string $routeName): bool
-    {
-        $currentRoute = request()->route();
-        if (! $currentRoute || ! $currentRoute->getName()) {
-            return false;
-        }
-        $patterns = $item['active_routes'] ?? [];
-        $patterns = is_string($patterns) ? [$patterns] : $patterns;
-        if (! is_array($patterns)) {
-            $patterns = [];
-        }
-        if ($routeName !== null) {
-            $patterns[] = $routeName;
-        }
-        $patterns = array_values(array_filter($patterns, 'is_string'));
-
-        return $patterns !== [] && request()->routeIs(...$patterns);
-    }
-
-    protected function getHeaderRoutes(): array
-    {
-        return $this->collectRoutes($this->processItems(config('navigation.header', []), 'header'));
-    }
-
-    protected function collectRoutes(array $items): array
-    {
-        $routes = [];
-        foreach ($items as $item) {
-            if (! empty($item['route'])) {
-                $routes[] = $item['route'];
-            }
-            if (! empty($item['children']) && is_array($item['children'])) {
-                $routes = array_merge($routes, $this->collectRoutes($item['children']));
-            }
-        }
-
-        return array_values(array_unique($routes));
-    }
-
-    protected function removeDuplicateRoutes(array $items, array $headerRoutes): array
-    {
-        $result = [];
-        foreach ($items as $item) {
-            $children = isset($item['children']) && is_array($item['children'])
-                ? $this->removeDuplicateRoutes($item['children'], $headerRoutes)
-                : [];
-            if (($item['route'] ?? null) !== null && in_array($item['route'], $headerRoutes, true)) {
-                if ($children === []) {
-                    continue;
-                }
-                $item['route'] = null;
-                $item['url'] = null;
-            }
-            $item['children'] = $children;
-            if (($item['route'] ?? null) === null && $item['url'] === null && $children === []) {
-                continue;
-            }
-            $result[] = $item;
-        }
-
-        return $result;
-    }
-
-    protected function processFooter(array $items): array
-    {
-        $items = $this->removeDuplicateRoutes($items, $this->getHeaderRoutes());
-        $limit = max(0, (int) config('navigation.settings.footer_max_items', 0));
-
-        return $limit > 0 ? $this->limitItems($items, $limit) : $items;
-    }
-
-    protected function limitItems(array $items, int &$remaining): array
-    {
-        $result = [];
-        foreach ($items as $item) {
-            $hasUrl = ! empty($item['url']);
-            if ($hasUrl && $remaining <= 0) {
-                continue;
-            }
-            if ($hasUrl) {
-                $remaining--;
-            }
-            $children = isset($item['children']) && is_array($item['children'])
-                ? $this->limitItems($item['children'], $remaining)
-                : [];
-            $item['children'] = $children;
-            if (! $hasUrl && $children === []) {
-                continue;
-            }
-            $result[] = $item;
-        }
-
-        return $result;
-    }
-
-    protected function limitHeaderItems(array $items): array
-    {
-        $limit = max(0, (int) config('navigation.settings.header_max_items', 0));
-
-        return $limit > 0 ? array_slice($items, 0, $limit) : $items;
+        return null;
     }
 }

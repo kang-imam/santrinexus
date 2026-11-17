@@ -18,7 +18,7 @@
     <meta name="robots" content="{{ $robots }}">
     <meta name="description" content="{{ $pageDescription }}">
     <title>{{ $pageTitle }}</title>
-    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
+    <link rel="icon" href="{{ asset('logo_santrinexus.svg') }}" sizes="any">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     @fonts
