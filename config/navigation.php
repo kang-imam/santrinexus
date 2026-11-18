@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'defaults' => [
         'icon' => 'heroicon-o-link',
@@ -27,6 +29,7 @@ return [
         'show_empty_state' => false,
         'check_route_exists' => true,
         'check_permissions' => true,
+        'maximum_depth' => 10,
         'external_link_target' => '_blank',
         'external_link_rel' => 'noopener noreferrer',
     ],
@@ -316,11 +319,41 @@ return [
             'icon_fallback' => 'fa-solid fa-user-circle',
             'auth' => 'auth',
             'children' => [
-                ['label' => 'Profil Saya', 'route' => 'account.profile', 'url' => '/account/profile', 'icon' => 'heroicon-o-user', 'icon_fallback' => 'fa-solid fa-user'],
-                ['label' => 'Edit Profil', 'route' => 'account.profile.edit', 'url' => '/account/profile/edit', 'icon' => 'heroicon-o-pencil-square', 'icon_fallback' => 'fa-solid fa-pen-to-square'],
-                ['label' => 'Informasi Pribadi', 'route' => 'account.personal-information', 'url' => '/account/personal-information', 'icon' => 'heroicon-o-identification', 'icon_fallback' => 'fa-solid fa-id-card'],
-                ['label' => 'Tampilan', 'route' => 'account.appearance', 'url' => '/account/appearance', 'icon' => 'heroicon-o-swatch', 'icon_fallback' => 'fa-solid fa-palette'],
-                ['label' => 'Bahasa', 'route' => 'account.language', 'url' => '/account/language', 'icon' => 'heroicon-o-language', 'icon_fallback' => 'fa-solid fa-language'],
+                [
+                    'label' => 'Profil Saya',
+                    'route' => 'account.profile',
+                    'url' => '/account/profile',
+                    'icon' => 'heroicon-o-user',
+                    'icon_fallback' => 'fa-solid fa-user',
+                ],
+                [
+                    'label' => 'Edit Profil',
+                    'route' => 'account.profile.edit',
+                    'url' => '/account/profile/edit',
+                    'icon' => 'heroicon-o-pencil-square',
+                    'icon_fallback' => 'fa-solid fa-pen-to-square',
+                ],
+                [
+                    'label' => 'Informasi Pribadi',
+                    'route' => 'account.personal-information',
+                    'url' => '/account/personal-information',
+                    'icon' => 'heroicon-o-identification',
+                    'icon_fallback' => 'fa-solid fa-id-card',
+                ],
+                [
+                    'label' => 'Tampilan',
+                    'route' => 'account.appearance',
+                    'url' => '/account/appearance',
+                    'icon' => 'heroicon-o-swatch',
+                    'icon_fallback' => 'fa-solid fa-palette',
+                ],
+                [
+                    'label' => 'Bahasa',
+                    'route' => 'account.language',
+                    'url' => '/account/language',
+                    'icon' => 'heroicon-o-language',
+                    'icon_fallback' => 'fa-solid fa-language',
+                ],
             ],
         ],
         [
@@ -329,11 +362,41 @@ return [
             'icon_fallback' => 'fa-solid fa-shield-halved',
             'auth' => 'auth',
             'children' => [
-                ['label' => 'Keamanan Akun', 'route' => 'account.security', 'url' => '/account/security', 'icon' => 'heroicon-o-shield-check', 'icon_fallback' => 'fa-solid fa-shield'],
-                ['label' => 'Ubah Password', 'route' => 'account.change-password', 'url' => '/account/change-password', 'icon' => 'heroicon-o-key', 'icon_fallback' => 'fa-solid fa-key'],
-                ['label' => 'Sesi Aktif', 'route' => 'account.sessions', 'url' => '/account/sessions', 'icon' => 'heroicon-o-computer-desktop', 'icon_fallback' => 'fa-solid fa-desktop'],
-                ['label' => 'Akun Terhubung', 'route' => 'account.connected-accounts', 'url' => '/account/connected-accounts', 'icon' => 'heroicon-o-link', 'icon_fallback' => 'fa-solid fa-link'],
-                ['label' => 'Riwayat Aktivitas', 'route' => 'account.activity-log', 'url' => '/account/activity-log', 'icon' => 'heroicon-o-clock', 'icon_fallback' => 'fa-solid fa-clock-rotate-left'],
+                [
+                    'label' => 'Keamanan Akun',
+                    'route' => 'account.security',
+                    'url' => '/account/security',
+                    'icon' => 'heroicon-o-shield-check',
+                    'icon_fallback' => 'fa-solid fa-shield',
+                ],
+                [
+                    'label' => 'Ubah Password',
+                    'route' => 'account.change-password',
+                    'url' => '/account/change-password',
+                    'icon' => 'heroicon-o-key',
+                    'icon_fallback' => 'fa-solid fa-key',
+                ],
+                [
+                    'label' => 'Sesi Aktif',
+                    'route' => 'account.sessions',
+                    'url' => '/account/sessions',
+                    'icon' => 'heroicon-o-computer-desktop',
+                    'icon_fallback' => 'fa-solid fa-desktop',
+                ],
+                [
+                    'label' => 'Akun Terhubung',
+                    'route' => 'account.connected-accounts',
+                    'url' => '/account/connected-accounts',
+                    'icon' => 'heroicon-o-link',
+                    'icon_fallback' => 'fa-solid fa-link',
+                ],
+                [
+                    'label' => 'Riwayat Aktivitas',
+                    'route' => 'account.activity-log',
+                    'url' => '/account/activity-log',
+                    'icon' => 'heroicon-o-clock',
+                    'icon_fallback' => 'fa-solid fa-clock-rotate-left',
+                ],
             ],
         ],
         [
@@ -342,9 +405,27 @@ return [
             'icon_fallback' => 'fa-solid fa-sliders',
             'auth' => 'auth',
             'children' => [
-                ['label' => 'Preferensi Akun', 'route' => 'account.preferences', 'url' => '/account/preferences', 'icon' => 'heroicon-o-adjustments-horizontal', 'icon_fallback' => 'fa-solid fa-sliders'],
-                ['label' => 'Notifikasi', 'route' => 'account.notifications', 'url' => '/account/notifications', 'icon' => 'heroicon-o-bell', 'icon_fallback' => 'fa-solid fa-bell'],
-                ['label' => 'Privasi', 'route' => 'account.privacy', 'url' => '/account/privacy', 'icon' => 'heroicon-o-lock-closed', 'icon_fallback' => 'fa-solid fa-lock'],
+                [
+                    'label' => 'Preferensi Akun',
+                    'route' => 'account.preferences',
+                    'url' => '/account/preferences',
+                    'icon' => 'heroicon-o-adjustments-horizontal',
+                    'icon_fallback' => 'fa-solid fa-sliders',
+                ],
+                [
+                    'label' => 'Notifikasi',
+                    'route' => 'account.notifications',
+                    'url' => '/account/notifications',
+                    'icon' => 'heroicon-o-bell',
+                    'icon_fallback' => 'fa-solid fa-bell',
+                ],
+                [
+                    'label' => 'Privasi',
+                    'route' => 'account.privacy',
+                    'url' => '/account/privacy',
+                    'icon' => 'heroicon-o-lock-closed',
+                    'icon_fallback' => 'fa-solid fa-lock',
+                ],
             ],
         ],
         [
@@ -353,9 +434,27 @@ return [
             'icon_fallback' => 'fa-solid fa-credit-card',
             'auth' => 'auth',
             'children' => [
-                ['label' => 'Langganan', 'route' => 'account.subscription', 'url' => '/account/subscription', 'icon' => 'heroicon-o-receipt-percent', 'icon_fallback' => 'fa-solid fa-receipt'],
-                ['label' => 'Billing', 'route' => 'account.billing', 'url' => '/account/billing', 'icon' => 'heroicon-o-banknotes', 'icon_fallback' => 'fa-solid fa-money-bill'],
-                ['label' => 'Invoice', 'route' => 'account.invoices', 'url' => '/account/invoices', 'icon' => 'heroicon-o-document-text', 'icon_fallback' => 'fa-solid fa-file-invoice'],
+                [
+                    'label' => 'Langganan',
+                    'route' => 'account.subscription',
+                    'url' => '/account/subscription',
+                    'icon' => 'heroicon-o-receipt-percent',
+                    'icon_fallback' => 'fa-solid fa-receipt',
+                ],
+                [
+                    'label' => 'Billing',
+                    'route' => 'account.billing',
+                    'url' => '/account/billing',
+                    'icon' => 'heroicon-o-banknotes',
+                    'icon_fallback' => 'fa-solid fa-money-bill',
+                ],
+                [
+                    'label' => 'Invoice',
+                    'route' => 'account.invoices',
+                    'url' => '/account/invoices',
+                    'icon' => 'heroicon-o-document-text',
+                    'icon_fallback' => 'fa-solid fa-file-invoice',
+                ],
             ],
         ],
         [
@@ -371,7 +470,7 @@ return [
     'auth' => [
         [
             'label' => 'Login',
-            'description' => 'Masuk ke akun.',
+            'description' => 'Masuk ke akun SantriNexus.',
             'route' => 'login',
             'url' => '/login',
             'icon' => 'heroicon-o-arrow-right-on-rectangle',
@@ -380,11 +479,20 @@ return [
         ],
         [
             'label' => 'Register',
-            'description' => 'Buat akun baru.',
+            'description' => 'Buat akun SantriNexus baru.',
             'route' => 'register',
             'url' => '/register',
             'icon' => 'heroicon-o-user-plus',
             'icon_fallback' => 'fa-solid fa-user-plus',
+            'auth' => 'guest',
+        ],
+        [
+            'label' => 'Login dengan Google',
+            'description' => 'Masuk menggunakan akun Google.',
+            'route' => 'auth.google.redirect',
+            'url' => '/auth/google',
+            'icon' => 'heroicon-o-globe-alt',
+            'icon_fallback' => 'fa-brands fa-google',
             'auth' => 'guest',
         ],
         [
@@ -436,6 +544,17 @@ return [
             'icon_fallback' => 'fa-solid fa-shield-halved',
             'auth' => 'guest',
         ],
+        [
+            'label' => 'Logout',
+            'description' => 'Keluar dari akun SantriNexus.',
+            'route' => 'logout',
+            'url' => '/logout',
+            'icon' => 'heroicon-o-arrow-left-on-rectangle',
+            'icon_fallback' => 'fa-solid fa-right-from-bracket',
+            'auth' => 'auth',
+            'method' => 'POST',
+            'navigable' => false,
+        ],
     ],
     'legal' => [
         [
@@ -463,7 +582,7 @@ return [
     'admin' => [
         [
             'label' => 'Dashboard Admin',
-            'description' => 'Panel administrasi.',
+            'description' => 'Panel administrasi SantriNexus.',
             'route' => 'filament.admin.pages.dashboard',
             'url' => '/admin',
             'icon' => 'heroicon-o-squares-2x2',

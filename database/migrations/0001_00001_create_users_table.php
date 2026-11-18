@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('google_id')->nullable()->unique();
             $table->rememberToken();
             $table->string('avatar')->nullable();
-            $table->string('status', 20)->default('active');
+            $table->string('status', 20)->default('active')->index();
             $table->timestamp('last_login_at')->nullable();
             $table->string('last_login_ip', 45)->nullable();
             $table->timestamps();

@@ -37,11 +37,9 @@
     $buttonId = $id ?: 'auth-submit-' . \Illuminate\Support\Str::uuid();
 @endphp
 <button id="{{ $buttonId }}" type="{{ $type }}" @disabled($isDisabled)
-    @if ($loadingOnSubmit) x-data="{ loading: false }"
-        x-on:click="if (!$el.form || !$el.form.checkValidity()) return; loading = true"
-        x-bind:disabled="loading || {{ $isDisabled ? 'true' : 'false' }}"
-        x-bind:aria-busy="loading ? 'true' : '{{ $loading ? 'true' : 'false' }}'" @endif
-    @if ($loading || $loadingOnSubmit) aria-busy="{{ $loading ? 'true' : 'false' }}" @endif
+    @if ($loadingOnSubmit) x-bind:disabled="loading || {{ $isDisabled ? 'true' : 'false' }}"
+        x-bind:aria-busy="loading ? 'true' : 'false'" @endif
+    @if ($loading) aria-busy="true" @endif
     @if ($isDisabled) aria-disabled="true" @endif
     {{ $attributes->except(['class', 'id'])->class([
             'group relative inline-flex items-center justify-center gap-2 overflow-hidden font-semibold tracking-wide transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50',
@@ -56,7 +54,7 @@
         @endif
         <span>{{ $loadingText }}</span>
     @elseif ($loadingOnSubmit)
-        <span class="inline-flex items-center justify-center gap-2" x-show="!loading">
+        <span class="inline-flex items-center justify-center gap-2" x-show="!loading" x-cloak>
             @if ($icon)
                 <x-shared.icon :name="$icon" class="size-4 shrink-0" aria-hidden="true" />
             @endif
@@ -65,7 +63,7 @@
                 <x-shared.icon :name="$iconRight" class="size-4 shrink-0" aria-hidden="true" />
             @endif
         </span>
-        <span class="inline-flex items-center justify-center gap-2" x-cloak x-show="loading">
+        <span class="inline-flex items-center justify-center gap-2" x-show="loading" x-cloak>
             @if ($showLoadingIcon)
                 <x-shared.icon name="heroicon-o-arrow-path" class="size-4 animate-spin shrink-0" aria-hidden="true" />
             @endif

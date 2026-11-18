@@ -19,6 +19,16 @@ class NavigationBuilder
 
     protected int $maximumDepth = 10;
 
+    protected array $routeParameterCache = [];
+
+    protected array $routeExistenceCache = [];
+
+    protected const ALLOWED_METHODS = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'];
+
+    protected const FORM_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
+
+    protected const URL_SCHEMES = ['http', 'https', 'mailto', 'tel', 'sms'];
+
     public function __construct()
     {
         $navigation = config('navigation', []);
@@ -65,7 +75,8 @@ class NavigationBuilder
 
     public function url(string $route, array $parameters = [], ?string $fallback = null): ?string
     {
-        if (trim($route) === '' || ! $this->routeExists($route)) {
+        $route = trim($route);
+        if ($route === '' || ! $this->routeExists($route)) {
             return $fallback;
         }
         if (! $this->hasRequiredParameters($this->getRequiredRouteParameters($route), $parameters)) {
@@ -83,11 +94,15 @@ class NavigationBuilder
         if (! is_string($route) || trim($route) === '') {
             return false;
         }
+        $route = trim($route);
+        if (array_key_exists($route, $this->routeExistenceCache)) {
+            return $this->routeExistenceCache[$route];
+        }
         if (! ($this->settings['check_route_exists'] ?? true)) {
-            return true;
+            return $this->routeExistenceCache[$route] = true;
         }
 
-        return Route::has($route);
+        return $this->routeExistenceCache[$route] = Route::has($route);
     }
 
     public function canAccess(array $item): bool
@@ -103,7 +118,7 @@ class NavigationBuilder
             $arguments = $item['can_parameters'] ?? [];
             $arguments = is_array($arguments) ? $arguments : [$arguments];
             try {
-                if (! Gate::check($ability, $arguments)) {
+                if (! Gate::check(trim($ability), $arguments)) {
                     return false;
                 }
             } catch (Throwable) {
@@ -120,15 +135,15 @@ class NavigationBuilder
             return false;
         }
         $route = $item['route'] ?? null;
-        if (is_string($route) && trim($route) !== '' && request()->routeIs($route)) {
+        if (is_string($route) && trim($route) !== '' && request()->routeIs(trim($route))) {
             return true;
         }
         $url = $item['url'] ?? null;
         if (! is_string($url) || trim($url) === '' || $this->isExternalUrl($url)) {
             return false;
         }
-        $targetPath = trim((string) parse_url($url, PHP_URL_PATH), '/');
-        $currentPath = trim(request()->path(), '/');
+        $targetPath = $this->normalizePath((string) parse_url($url, PHP_URL_PATH));
+        $currentPath = $this->normalizePath(request()->path());
         if ($targetPath === '') {
             return $currentPath === '';
         }
@@ -165,27 +180,24 @@ class NavigationBuilder
                 continue;
             }
             $item = array_replace($this->defaults, $item);
-            if (! filter_var($item['visible'] ?? true, FILTER_VALIDATE_BOOLEAN)) {
+            if (! $this->isVisible($item['visible'] ?? true)) {
                 continue;
             }
             if (! $this->canAccess($item)) {
                 continue;
             }
             $children = $item['children'] ?? [];
-            $item['children'] = is_array($children)
-                ? $this->resolveItems($children, $context, $depth + 1)
-                : [];
+            $item['children'] = is_array($children) ? $this->resolveItems($children, $context, $depth + 1) : [];
             $item = $this->resolveItem($item, $context);
             if ($item === null) {
                 continue;
             }
             if ($item['children'] !== []) {
-                $childIsActive = collect($item['children'])->contains(
+                $item['active'] = $item['active'] || collect($item['children'])->contains(
                     fn (array $child): bool => (bool) ($child['active'] ?? false)
                 );
-                $item['active'] = $item['active'] || $childIsActive;
             }
-            if ($item['children'] === [] && empty($item['url'])) {
+            if ($item['children'] === [] && empty($item['url']) && ! ($item['requires_form'] ?? false)) {
                 continue;
             }
             $resolved[] = $item;
@@ -206,19 +218,12 @@ class NavigationBuilder
         );
         $requiredParameters = $item['requires_parameters'] ?? [];
         $requiredParameters = is_array($requiredParameters) ? $requiredParameters : [];
-        $routeExists = $routeName !== null && $routeName !== ''
-            ? $this->routeExists($routeName)
-            : false;
+        $routeExists = $routeName !== null && $routeName !== '' ? $this->routeExists($routeName) : false;
         if ($routeName !== null && $routeName !== '' && ! $routeExists) {
             return null;
         }
-        $routeParameters = $routeExists
-            ? $this->getRequiredRouteParameters($routeName)
-            : [];
-        $requiredParameters = array_values(array_unique(array_merge(
-            $requiredParameters,
-            $routeParameters
-        )));
+        $routeParameters = $routeExists ? $this->getRequiredRouteParameters($routeName) : [];
+        $requiredParameters = array_values(array_unique(array_merge($requiredParameters, $routeParameters)));
         $hasParameters = $this->hasRequiredParameters($requiredParameters, $parameters);
         $url = null;
         if ($routeName !== null && $routeName !== '' && $routeExists && $hasParameters) {
@@ -229,7 +234,11 @@ class NavigationBuilder
             $hasParameters = $url !== null;
         }
         $method = strtoupper(trim((string) ($item['method'] ?? 'GET')));
+        if (! in_array($method, self::ALLOWED_METHODS, true)) {
+            $method = 'GET';
+        }
         $external = $this->isExternalUrl($url);
+        $requiresForm = in_array($method, self::FORM_METHODS, true);
         $navigable = (bool) ($item['navigable'] ?? true)
             && in_array($method, ['GET', 'HEAD'], true)
             && is_string($url)
@@ -238,16 +247,13 @@ class NavigationBuilder
         $defaultTarget = $this->defaults['target'] ?? '_self';
         $target = $item['target'] ?? $defaultTarget;
         $allowedTargets = ['_self', '_blank', '_parent', '_top'];
-        $target = is_string($target) && in_array($target, $allowedTargets, true)
-            ? $target
-            : '_self';
+        $target = is_string($target) && in_array($target, $allowedTargets, true) ? $target : '_self';
         $item['parameters'] = $parameters;
         $item['url'] = $url;
-        $item['route_exists'] = $routeName !== null && $routeName !== ''
-            ? $routeExists
-            : null;
+        $item['route_exists'] = $routeName !== null && $routeName !== '' ? $routeExists : null;
         $item['parameters_resolved'] = $hasParameters;
         $item['method'] = $method;
+        $item['requires_form'] = $requiresForm;
         $item['is_external'] = $external;
         $item['target'] = $external && $target === $defaultTarget
             ? ($this->settings['external_link_target'] ?? '_blank')
@@ -256,8 +262,7 @@ class NavigationBuilder
             ? ($this->settings['external_link_rel'] ?? 'noopener noreferrer')
             : ($item['rel'] ?? null);
         $item['navigable'] = $navigable;
-        $item['active'] = (bool) ($this->settings['show_active_state'] ?? true)
-            && $this->isActive($item);
+        $item['active'] = (bool) ($this->settings['show_active_state'] ?? true) && $this->isActive($item);
         $showIcons = (bool) ($this->settings['show_icons'] ?? true);
         $item['icon'] = $showIcons ? ($item['icon'] ?? null) : null;
         $item['icon_fallback'] = $showIcons ? ($item['icon_fallback'] ?? null) : null;
@@ -273,10 +278,13 @@ class NavigationBuilder
 
     protected function getRequiredRouteParameters(string $route): array
     {
+        if (array_key_exists($route, $this->routeParameterCache)) {
+            return $this->routeParameterCache[$route];
+        }
         try {
             $registeredRoute = Route::getRoutes()->getByName($route);
             if (! $registeredRoute) {
-                return [];
+                return $this->routeParameterCache[$route] = [];
             }
             preg_match_all('/\{([^}?]+)(\?)?\}/', $registeredRoute->uri(), $matches, PREG_SET_ORDER);
             $parameters = [];
@@ -287,9 +295,9 @@ class NavigationBuilder
                 $parameters[] = $match[1];
             }
 
-            return array_values(array_unique($parameters));
+            return $this->routeParameterCache[$route] = array_values(array_unique($parameters));
         } catch (Throwable) {
-            return [];
+            return $this->routeParameterCache[$route] = [];
         }
     }
 
@@ -344,7 +352,7 @@ class NavigationBuilder
             return false;
         }
         $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
-        if ($scheme !== '' && ! in_array($scheme, ['http', 'https', 'mailto', 'tel', 'sms'], true)) {
+        if ($scheme !== '' && ! in_array($scheme, self::URL_SCHEMES, true)) {
             return false;
         }
         if (in_array($scheme, ['http', 'https'], true)) {
@@ -419,6 +427,26 @@ class NavigationBuilder
         return $mode === 'any'
             ? in_array(true, $results, true)
             : ! in_array(false, $results, true);
+    }
+
+    protected function isVisible(mixed $visible): bool
+    {
+        if (is_bool($visible)) {
+            return $visible;
+        }
+        if (is_numeric($visible)) {
+            return (bool) $visible;
+        }
+        if (is_string($visible)) {
+            return filter_var($visible, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
+        }
+
+        return false;
+    }
+
+    protected function normalizePath(string $path): string
+    {
+        return trim(rawurldecode($path), '/');
     }
 
     protected function findByLabel(array $items, string $label): ?array

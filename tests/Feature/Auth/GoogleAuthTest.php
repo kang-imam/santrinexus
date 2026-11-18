@@ -30,7 +30,7 @@ function googleProfile(array $attributes = []): array
     ], $attributes);
 }
 test('user can login using an existing google account', function () {
-    $user = User::create([
+    $user = User::forceCreate([
         'name' => 'Pengguna Google',
         'username' => 'pengguna123',
         'email' => 'google@example.com',
@@ -60,7 +60,7 @@ test('new google user can register automatically', function () {
     expect($user->username)->not->toBeEmpty();
 });
 test('existing verified local account can be linked with google', function () {
-    $user = User::create([
+    $user = User::forceCreate([
         'name' => 'Pengguna Lokal',
         'username' => 'penggunalokal',
         'email' => 'google@example.com',
@@ -85,7 +85,7 @@ test('google login is rejected when google email is not verified', function () {
     $this->assertDatabaseCount('users', 0);
 });
 test('inactive account cannot login using google', function () {
-    User::create([
+    User::forceCreate([
         'name' => 'Pengguna Nonaktif',
         'username' => 'penggunanonaktif',
         'email' => 'google@example.com',
@@ -101,7 +101,7 @@ test('inactive account cannot login using google', function () {
     $this->assertGuest('web');
 });
 test('soft deleted account cannot login using google', function () {
-    $user = User::create([
+    $user = User::forceCreate([
         'name' => 'Pengguna Terhapus',
         'username' => 'penggunaterhapus',
         'email' => 'google@example.com',

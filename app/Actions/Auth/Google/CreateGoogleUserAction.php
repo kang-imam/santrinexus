@@ -17,7 +17,7 @@ class CreateGoogleUserAction
             ]);
         }
 
-        return User::create([
+        return User::forceCreate([
             'name' => $data->name ?: 'Pengguna Google',
             'username' => $this->generateUsername($data->name),
             'email' => $data->email,
