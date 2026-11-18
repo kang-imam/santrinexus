@@ -48,7 +48,7 @@
     $hasSecondaryAction = $secondaryUrl !== null && $secondaryLabel !== '';
 @endphp
 <section aria-labelledby="{{ $soonId }}-title"
-    class="relative left-1/2 isolate flex min-h-[min(850px,85dvh)] w-screen max-w-none -translate-x-1/2 flex-col items-center justify-center overflow-hidden px-4 py-16 text-center sm:min-h-[75dvh] sm:px-6 sm:py-20 lg:py-24">
+    class="relative isolate flex min-h-[min(850px,85dvh)] w-full max-w-none flex-col items-center justify-center overflow-hidden px-4 py-16 text-center sm:min-h-[75dvh] sm:px-6 sm:py-20 lg:py-24">
     <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
         <div
             class="soon-ambient soon-ambient-one left-1/2 top-1/2 size-[24rem] -translate-x-1/2 -translate-y-1/2 sm:size-[36rem]">
@@ -82,7 +82,8 @@
                 class="soon-core-inner absolute inset-2 rounded-[1.5rem] border border-white/[0.05] sm:rounded-[1.75rem]">
             </div>
             <div class="soon-core-scan absolute inset-0 overflow-hidden rounded-[2rem] sm:rounded-[2.25rem]">
-                <span></span></div>
+                <span></span>
+            </div>
             <div class="soon-core-glow absolute inset-0 rounded-[2rem] sm:rounded-[2.25rem]"></div>
             <x-shared.icon :name="$icon" :fallback="$iconFallback" :class="$iconClass . ' soon-main-icon relative z-10 shrink-0 text-cyan-300'" />
         </div>

@@ -1,18 +1,30 @@
 <?php
 
+use App\Http\Controllers\Web\Auth\ForgotPasswordController;
 use App\Http\Controllers\Web\Auth\GoogleAuthController;
 use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\Auth\LogoutController;
 use App\Http\Controllers\Web\Auth\RegisterController;
+use App\Http\Controllers\Web\Auth\ResetPasswordController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    Route::view('/login', 'auth.login')->name('login');
-    Route::post('/login', [LoginController::class, 'store'])->name('login.store');
-    Route::view('/register', 'auth.register')->name('register');
-    Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
-    Route::view('/forgot-password', 'auth.forgot-password')->name('password.request');
-    Route::view('/reset-password/{token}', 'auth.reset-password')->name('password.reset');
+    Route::controller(LoginController::class)->group(function () {
+        Route::view('/login', 'auth.login')->name('login');
+        Route::post('/login', 'store')->name('login.store');
+    });
+    Route::controller(RegisterController::class)->group(function () {
+        Route::view('/register', 'auth.register')->name('register');
+        Route::post('/register', 'store')->name('register.store');
+    });
+    Route::controller(ForgotPasswordController::class)->group(function () {
+        Route::view('/forgot-password', 'auth.forgot-password')->name('password.request');
+        Route::post('/forgot-password', '__invoke')->name('password.email');
+    });
+    Route::controller(ResetPasswordController::class)->group(function () {
+        Route::view('/reset-password/{token}', 'auth.reset-password')->name('password.reset');
+        Route::post('/reset-password', '__invoke')->name('password.update');
+    });
     Route::view('/magic-link', 'auth.magic-link')->name('magic-link');
     Route::view('/accept-invitation/{token}', 'auth.accept-invitation')->name('invitation.accept');
     Route::prefix('auth/google')->name('auth.google.')->controller(GoogleAuthController::class)->group(function () {

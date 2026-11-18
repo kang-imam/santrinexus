@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\Auth\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -24,7 +25,7 @@ use Spatie\Permission\Traits\HasRoles;
     'avatar',
 ])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+final class User extends Authenticatable
 {
     use HasFactory, HasRoles, Notifiable, SoftDeletes;
 
@@ -41,7 +42,7 @@ class User extends Authenticatable
     protected function phone(): Attribute
     {
         return Attribute::make(
-            set: fn (?string $value) => self::normalizePhone($value)
+            set: fn (?string $value) => self::normalizePhone($value),
         );
     }
 
@@ -62,5 +63,10 @@ class User extends Authenticatable
         } catch (NumberParseException $exception) {
             throw new InvalidArgumentException('Format nomor telepon tidak valid.', 0, $exception);
         }
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 }
