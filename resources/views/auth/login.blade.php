@@ -29,11 +29,20 @@
                             Lupa password?
                         </a>
                     </div>
-                    <x-auth.forms.submit-button type="submit" variant="primary" size="lg"
-                        loading-text="Sedang masuk..." loading-on-submit icon-right="heroicon-o-arrow-right">
+                    <x-auth.forms.submit-button variant="primary" loading-text="Sedang masuk..." loading-on-submit
+                        icon-right="heroicon-o-arrow-right">
                         Masuk
                     </x-auth.forms.submit-button>
                 </form>
+                <div class="flex flex-col items-center gap-2 text-center">
+                    <x-auth.navigation.auth-link :route="'magic-link'" icon="heroicon-o-envelope" variant="primary"
+                        size="md" underline>
+                        Masuk tanpa kata sandi
+                    </x-auth.navigation.auth-link>
+                    <p class="text-xs leading-5 text-muted">
+                        Kami akan mengirimkan tautan login ke email terdaftar Anda.
+                    </p>
+                </div>
                 <x-auth.navigation.divider />
                 <x-auth.social.social-login :providers="['google']" variant="outline" size="lg" layout="vertical"
                     show-icons />

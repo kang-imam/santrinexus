@@ -26,9 +26,9 @@
         $accountEmail = is_string($user?->email) ? trim($user->email) : '';
     @endphp
     @if ($mode === 'mobile')
-        <div x-data="{ open: false }" class="w-full">
-            <button type="button" @click="open = !open" :aria-expanded="open.toString()" aria-controls="{{ $menuId }}"
-                class="group flex min-h-16 w-full min-w-0 items-center gap-3 rounded-2xl border border-border/80 bg-surface/80 p-3 text-left shadow-sm shadow-black/10 transition-colors hover:border-primary/40 hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+        <div x-data="{ open: false, close() { this.open = false; }, toggle() { this.open = !this.open; } }" @keydown.escape.window="close()" class="w-full">
+            <button type="button" @click="toggle()" :aria-expanded="open.toString()" aria-controls="{{ $menuId }}"
+                class="group flex min-h-16 w-full min-w-0 items-center gap-3 rounded-2xl border border-border/80 bg-surface/80 p-3 text-left shadow-sm shadow-black/10 transition-all duration-200 hover:border-primary/40 hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
                 <x-navigations.header.partials.user-avatar :user="$user" size="lg" />
                 <span class="flex min-w-0 flex-1 flex-col">
                     <span class="truncate text-sm font-bold text-foreground">{{ $accountName }}</span>
@@ -43,7 +43,7 @@
                 x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
                 x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0"
                 x-transition:leave-end="opacity-0 -translate-y-2" :aria-hidden="(!open).toString()" :inert="!open"
-                class="mt-2 overflow-hidden rounded-2xl border border-border/80 bg-surface/70">
+                class="mt-2 overflow-hidden rounded-2xl border border-border/80 bg-surface/90 shadow-lg shadow-black/10">
                 <div class="border-b border-border/70 bg-surface-raised/50 px-4 py-3">
                     <p class="text-[10px] font-bold uppercase tracking-wider text-muted">Akun aktif</p>
                     <p class="mt-1 truncate text-xs font-medium text-foreground">{{ $accountName }}</p>
@@ -75,10 +75,7 @@
     @else
         <div x-data="{
             open: false,
-            getItems() {
-                return Array.from(this.$refs.menu?.querySelectorAll('a[href]:not([aria-disabled=true]):not([tabindex=\'-1\']), button:not([disabled]):not([tabindex=\'-1\'])') ?? [])
-                    .filter(item => item.getClientRects().length > 0 && !item.closest('[inert]'));
-            },
+            getItems() { return Array.from(this.$refs.menu?.querySelectorAll('a[href]:not([aria-disabled=true]):not([tabindex=\'-1\']), button:not([disabled]):not([tabindex=\'-1\'])') ?? []).filter(item => item.getClientRects().length > 0 && !item.closest('[inert]')); },
             openMenu(position = 'first') {
                 this.open = true;
                 this.$nextTick(() => {
@@ -88,19 +85,16 @@
                 });
             },
             close(restoreFocus = false) {
+                if (!this.open) return;
                 this.open = false;
                 if (restoreFocus) this.$nextTick(() => this.$refs.trigger?.focus());
             },
-            toggle() {
-                this.open ? this.close() : this.openMenu();
-            },
+            toggle() { this.open ? this.close() : this.openMenu(); },
             moveFocus(direction) {
                 const items = this.getItems();
                 if (!items.length) return;
                 const current = items.indexOf(document.activeElement);
-                const next = current < 0 ?
-                    (direction > 0 ? 0 : items.length - 1) :
-                    (current + direction + items.length) % items.length;
+                const next = current < 0 ? (direction > 0 ? 0 : items.length - 1) : (current + direction + items.length) % items.length;
                 items[next].focus();
             },
             handleKeydown(event) {
@@ -134,7 +128,7 @@
             class="relative w-full lg:w-auto">
             <button x-ref="trigger" type="button" @click="toggle()" :aria-expanded="open.toString()"
                 aria-controls="{{ $menuId }}" aria-label="Menu akun {{ $accountName }}"
-                class="group flex w-full min-w-0 items-center gap-2 rounded-xl border border-transparent bg-transparent px-2 py-1.5 text-left transition-colors hover:border-border/80 hover:bg-surface/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:max-w-60">
+                class="group flex w-full min-w-0 items-center gap-2 rounded-xl border border-transparent bg-transparent px-2 py-1.5 text-left transition-all duration-200 hover:border-border/80 hover:bg-surface/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:max-w-60">
                 <x-navigations.header.partials.user-avatar :user="$user" size="md" />
                 <span class="flex min-w-0 flex-1 flex-col">
                     <span
@@ -146,10 +140,13 @@
                     ::class="{ 'rotate-180 text-primary': open }" aria-hidden="true" />
             </button>
             <div id="{{ $menuId }}" x-ref="menu" x-cloak x-show="open"
-                x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2"
-                x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150"
-                x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2"
-                :aria-hidden="(!open).toString()" :inert="!open"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 -translate-y-2 scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                x-transition:leave-end="opacity-0 -translate-y-2 scale-95" :aria-hidden="(!open).toString()"
+                :inert="!open"
                 class="absolute right-0 top-full z-50 w-72 max-w-[calc(100vw-2rem)] origin-top-right pt-3">
                 <div
                     class="overflow-hidden rounded-2xl border border-border/80 bg-surface/95 shadow-2xl shadow-black/20 backdrop-blur-xl">
@@ -209,16 +206,18 @@
         <div class="flex w-full min-w-0 items-center gap-2 lg:w-auto">
             @if ($loginRoute)
                 <a href="{{ $loginRoute }}"
-                    class="inline-flex min-h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-border/80 bg-surface/70 px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:flex-none">
+                    class="group inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-border-bright/70 bg-surface/70 px-4 py-2.5 text-sm font-semibold text-foreground transition-all duration-200 hover:border-primary/50 hover:bg-surface-hover hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:flex-none">
                     <x-shared.icon name="heroicon-o-arrow-right-end-on-rectangle" fallback="fa-solid fa-right-to-bracket"
-                        class="size-4 shrink-0" aria-hidden="true" />
+                        class="size-4 shrink-0 transition-transform duration-200 group-hover:-translate-x-0.5"
+                        aria-hidden="true" />
                     <span>Masuk</span>
                 </a>
             @endif
             @if ($registerRoute)
                 <a href="{{ $registerRoute }}"
-                    class="inline-flex min-h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm shadow-primary/20 transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:flex-none">
-                    <x-shared.icon name="heroicon-o-user-plus" fallback="fa-solid fa-user-plus" class="size-4 shrink-0"
+                    class="group inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-primary/70 bg-primary px-4 py-2.5 text-sm font-bold text-background shadow-lg shadow-primary/10 transition-all duration-200 hover:border-cyan-bright hover:bg-cyan-bright hover:shadow-primary/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:flex-none">
+                    <x-shared.icon name="heroicon-o-user-plus" fallback="fa-solid fa-user-plus"
+                        class="size-4 shrink-0 transition-transform duration-200 group-hover:scale-110"
                         aria-hidden="true" />
                     <span>Daftar</span>
                 </a>

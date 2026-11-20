@@ -31,20 +31,33 @@
         'lg' => 'text-base gap-2',
     ];
     $linkHref = $route ? route($route, $parameters) : $href;
+    $isDisabled = $disabled || blank($linkHref);
+    $isExternal = $external || $newTab;
+    $linkId = $id ?: null;
     $variantClass = $variants[$variant] ?? $variants['primary'];
     $sizeClass = $sizes[$size] ?? $sizes['md'];
-    $isDisabled = $disabled || blank($linkHref);
-    $linkId = $id ?: null;
-    $target = $newTab ? '_blank' : null;
-    $rel = $newTab ? 'noopener noreferrer' : ($external ? 'noopener noreferrer' : null);
+    $baseClass = [
+        'inline-flex items-center font-medium rounded-sm',
+        'transition-colors duration-200',
+        'focus-visible:outline-none focus-visible:ring-2',
+        'focus-visible:ring-primary focus-visible:ring-offset-2',
+        'focus-visible:ring-offset-background',
+        $variantClass,
+        $sizeClass,
+        $fullWidth ? 'w-full' : 'w-auto',
+        $active ? 'font-semibold' : '',
+        $underline ? 'underline underline-offset-4' : 'no-underline',
+    ];
+    $disabledClass = [
+        'inline-flex items-center font-medium rounded-sm',
+        'opacity-50 cursor-not-allowed',
+        $sizeClass,
+        $fullWidth ? 'w-full' : 'w-auto',
+    ];
 @endphp
 @if ($isDisabled)
     <span @if ($linkId) id="{{ $linkId }}" @endif aria-disabled="true"
-        {{ $attributes->except(['class', 'id'])->class([
-                'inline-flex items-center font-medium opacity-50 cursor-not-allowed',
-                $sizeClass,
-                $fullWidth ? 'w-full' : 'w-auto',
-            ]) }}>
+        {{ $attributes->except(['class', 'id', 'href', 'target', 'rel'])->class($disabledClass) }}>
         @if ($icon)
             <x-shared.icon :name="$icon" class="size-4 shrink-0" aria-hidden="true" />
         @endif
@@ -55,18 +68,11 @@
     </span>
 @else
     <a href="{{ $linkHref }}" @if ($linkId) id="{{ $linkId }}" @endif
-        @if ($target) target="{{ $target }}" @endif
-        @if ($rel) rel="{{ $rel }}" @endif
+        @if ($newTab) target="_blank" @endif
+        @if ($isExternal) rel="noopener noreferrer" @endif
         @if ($active) aria-current="page" @endif
         @if ($external) aria-label="{{ trim(strip_tags((string) $slot)) }} (tautan eksternal)" @endif
-        {{ $attributes->except(['class', 'id', 'href', 'target', 'rel'])->class([
-                'inline-flex items-center font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm',
-                $variantClass,
-                $sizeClass,
-                $fullWidth ? 'w-full' : 'w-auto',
-                $active ? 'font-semibold' : '',
-                $underline ? 'underline underline-offset-4' : 'no-underline',
-            ]) }}>
+        {{ $attributes->except(['class', 'id', 'href', 'target', 'rel'])->class($baseClass) }}>
         @if ($icon)
             <x-shared.icon :name="$icon" class="size-4 shrink-0" aria-hidden="true" />
         @endif

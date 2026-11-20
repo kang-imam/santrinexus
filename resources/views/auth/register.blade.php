@@ -48,8 +48,8 @@
                             SantriNexus.
                         </x-auth.forms.checkbox>
                     </div>
-                    <x-auth.forms.submit-button type="submit" variant="primary" size="lg"
-                        loading-text="Membuat akun..." loading-on-submit icon-right="heroicon-o-arrow-right">
+                    <x-auth.forms.submit-button variant="primary" loading-text="Membuat akun..." loading-on-submit
+                        icon-right="heroicon-o-arrow-right">
                         Buat Akun
                     </x-auth.forms.submit-button>
                 </form>

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Notifications\Auth\ResetPasswordNotification;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -37,6 +38,11 @@ final class User extends Authenticatable
             'last_login_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->status === 'active' && ($this->hasRole('Super Admin', 'web') || $this->can('panel.access'));
     }
 
     protected function phone(): Attribute

@@ -28,4 +28,5 @@ return [
         ],
     ],
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
+    'magic_link_expiration' => env('MAGIC_LINK_EXPIRATION', 15),
 ];

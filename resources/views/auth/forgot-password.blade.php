@@ -17,8 +17,8 @@
                     @csrf
                     <x-auth.forms.input name="email" label="Alamat Email" type="email" placeholder="nama@email.com"
                         autocomplete="email" icon="heroicon-o-envelope" required autofocus />
-                    <x-auth.forms.submit-button type="submit" variant="primary" size="lg"
-                        loading-text="Mengirim tautan..." loading-on-submit icon-right="heroicon-o-paper-airplane">
+                    <x-auth.forms.submit-button variant="primary" loading-text="Mengirim tautan..." loading-on-submit
+                        icon-right="heroicon-o-paper-airplane">
                         Kirim Tautan Reset
                     </x-auth.forms.submit-button>
                 </form>

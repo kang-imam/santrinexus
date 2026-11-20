@@ -22,8 +22,8 @@
                         <x-auth.forms.password name="password_confirmation" label="Konfirmasi Password Baru"
                             placeholder="Masukkan ulang password baru" autocomplete="new-password" required />
                     </div>
-                    <x-auth.forms.submit-button type="submit" variant="primary" size="lg"
-                        loading-text="Memperbarui password..." loading-on-submit icon-right="heroicon-o-check">
+                    <x-auth.forms.submit-button variant="primary" loading-text="Memperbarui password..."
+                        loading-on-submit icon-right="heroicon-o-check">
                         Simpan Password Baru
                     </x-auth.forms.submit-button>
                 </form>

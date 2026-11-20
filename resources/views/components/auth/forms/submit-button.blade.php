@@ -38,11 +38,12 @@
 @endphp
 <button id="{{ $buttonId }}" type="{{ $type }}" @disabled($isDisabled)
     @if ($loadingOnSubmit) x-bind:disabled="loading || {{ $isDisabled ? 'true' : 'false' }}"
-        x-bind:aria-busy="loading ? 'true' : 'false'" @endif
+        x-bind:aria-busy="loading ? 'true' : 'false'"
+        x-bind:aria-disabled="loading || {{ $isDisabled ? 'true' : 'false' }}" @endif
     @if ($loading) aria-busy="true" @endif
     @if ($isDisabled) aria-disabled="true" @endif
-    {{ $attributes->except(['class', 'id'])->class([
-            'group relative inline-flex items-center justify-center gap-2 overflow-hidden font-semibold tracking-wide transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50',
+    {{ $attributes->except(['id'])->class([
+            'group relative inline-flex items-center justify-center gap-2 overflow-hidden font-semibold tracking-wide transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100',
             $variantClass,
             $sizeClass,
             $fullWidth ? 'w-full' : 'w-auto',
@@ -50,9 +51,10 @@
         ]) }}>
     @if ($loading)
         @if ($showLoadingIcon)
-            <x-shared.icon name="heroicon-o-arrow-path" class="size-4 animate-spin shrink-0" aria-hidden="true" />
+            <x-shared.icon name="heroicon-o-arrow-path" class="size-4 shrink-0 animate-spin motion-reduce:animate-none"
+                aria-hidden="true" />
         @endif
-        <span>{{ $loadingText }}</span>
+        <span role="status" aria-live="polite">{{ $loadingText }}</span>
     @elseif ($loadingOnSubmit)
         <span class="inline-flex items-center justify-center gap-2" x-show="!loading" x-cloak>
             @if ($icon)
@@ -65,9 +67,10 @@
         </span>
         <span class="inline-flex items-center justify-center gap-2" x-show="loading" x-cloak>
             @if ($showLoadingIcon)
-                <x-shared.icon name="heroicon-o-arrow-path" class="size-4 animate-spin shrink-0" aria-hidden="true" />
+                <x-shared.icon name="heroicon-o-arrow-path"
+                    class="size-4 shrink-0 animate-spin motion-reduce:animate-none" aria-hidden="true" />
             @endif
-            <span>{{ $loadingText }}</span>
+            <span role="status" aria-live="polite">{{ $loadingText }}</span>
         </span>
     @else
         @if ($icon)
