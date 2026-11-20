@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\Auth\LogoutController;
 use App\Http\Controllers\Web\Auth\MagicLinkController;
 use App\Http\Controllers\Web\Auth\RegisterController;
 use App\Http\Controllers\Web\Auth\ResetPasswordController;
+use App\Http\Controllers\Web\Auth\TwoFactorChallengeController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -36,11 +37,23 @@ Route::middleware('guest')->group(function () {
         Route::post('/magic-link/verify', 'verify')->middleware('throttle:5,1')->name('magic-link.verify');
     });
     Route::view('/accept-invitation/{token}', 'auth.accept-invitation')->name('invitation.accept');
-    Route::prefix('auth/google')->name('auth.google.')->controller(GoogleAuthController::class)->group(function () {
-        Route::get('/', 'redirect')->middleware('throttle:10,1')->name('redirect');
-        Route::get('/callback', 'callback')->middleware('throttle:10,1')->name('callback');
-    });
+    Route::prefix('auth/google')
+        ->name('auth.google.')
+        ->controller(GoogleAuthController::class)
+        ->group(function () {
+            Route::get('/', 'redirect')->middleware('throttle:10,1')->name('redirect');
+            Route::get('/callback', 'callback')->middleware('throttle:10,1')->name('callback');
+        });
 });
+Route::middleware('two-factor.pending')
+    ->prefix('two-factor-challenge')
+    ->name('two-factor.challenge.')
+    ->controller(TwoFactorChallengeController::class)
+    ->group(function () {
+        Route::get('/', 'create')->name('create');
+        Route::post('/', 'store')->middleware('throttle:two-factor-challenge')->name('store');
+        Route::delete('/', 'destroy')->name('destroy');
+    });
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LogoutController::class, 'destroy'])->middleware('throttle:5,1')->name('logout');
     Route::get('/verify-email', function (Request $request) {
@@ -67,8 +80,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/confirm-password', 'create')->name('password.confirm');
         Route::post('/confirm-password', 'store')->middleware('throttle:5,1')->name('password.confirm.store');
     });
-    Route::view('/two-factor-challenge', 'auth.two-factor-challenge')->name('two-factor.login');
-    Route::view('/verify-two-factor', 'auth.verify-two-factor')->name('two-factor.verify');
     Route::view('/account-disabled', 'auth.errors.account-disabled')->name('account.disabled');
     Route::view('/account-locked', 'auth.errors.account-locked')->name('account.locked');
     Route::view('/email-not-verified', 'auth.errors.email-not-verified')->name('account.email-not-verified');

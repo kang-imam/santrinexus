@@ -14,6 +14,7 @@
     'showDescription' => true,
     'showError' => true,
     'disabled' => false,
+    'disabledExpression' => null,
     'required' => true,
     'id' => null,
 ])
@@ -43,6 +44,7 @@
     $initialValue = is_scalar($initialValue)
         ? substr(preg_replace('/\D/', '', (string) $initialValue), 0, $length)
         : '';
+    $disabledExpression = filled($disabledExpression) ? $disabledExpression : 'false';
 @endphp
 <div x-data="{
     code: @js($initialValue),
@@ -62,7 +64,7 @@
         this.$refs.hidden.value = this.code;
         this.$refs.hidden.dispatchEvent(new Event('input', { bubbles: true }));
         this.$refs.hidden.dispatchEvent(new Event('change', { bubbles: true }));
-        if (@js($autoSubmit) && this.code.length === this.length) {
+        if (@js($autoSubmit) && this.code.length === this.length && !this.disabled) {
             this.$nextTick(() => this.$refs.hidden.form?.requestSubmit());
         }
     },
@@ -85,6 +87,10 @@
         this.$refs.cells[Math.min(pasted.length, this.length - 1)]?.focus();
     },
     keydown(event, index) {
+        if (this.disabled) {
+            event.preventDefault();
+            return;
+        }
         if (event.key === 'Backspace') {
             if (this.code[index]) {
                 this.update(index, '');
@@ -104,11 +110,13 @@
         }
     },
     clear() {
+        if (this.disabled) return;
         this.code = '';
         this.sync();
         this.$refs.cells[0]?.focus();
     }
-}" {{ $attributes->class(['w-full space-y-3']) }}>
+}" x-effect="disabled = @js($disabled) || ({{ $disabledExpression }})"
+    {{ $attributes->class(['w-full space-y-3']) }}>
     @if ($showLabel)
         <label for="{{ $fieldId }}-0" class="block text-sm font-medium text-foreground">
             {{ $label }}
@@ -120,7 +128,7 @@
     @if ($showDescription && filled($description))
         <p id="{{ $descriptionId }}" class="text-xs leading-5 text-muted">{{ $description }}</p>
     @endif
-    <input x-ref="hidden" type="hidden" name="{{ $name }}" value="{{ $initialValue }}" @required($required)
+    <input x-ref="hidden" type="hidden" name="{{ $name }}" value="{{ $initialValue }}" :disabled="disabled"
         @if ($hasError) aria-invalid="true" @endif
         @if ($describedBy !== '') aria-describedby="{{ $describedBy }}" @endif />
     <div class="flex flex-wrap items-center gap-2" role="group" aria-label="{{ $label }}">
@@ -131,7 +139,7 @@
                 :value="code[{{ $index }}] || ''"
                 @input="update({{ $index }}, $event.target.value); $event.target.value = code[{{ $index }}] || ''"
                 @keydown="keydown($event, {{ $index }})" @paste="paste($event)" @focus="$event.target.select()"
-                @disabled="disabled" @class([
+                :disabled="disabled" @class([
                     $sizeClass,
                     'rounded-xl border bg-surface-raised text-center font-semibold text-foreground outline-none transition duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50',
                     $hasError

@@ -26,7 +26,13 @@ use Spatie\Permission\Traits\HasRoles;
     'password',
     'avatar',
 ])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden([
+    'password',
+    'remember_token',
+    'two_factor_secret',
+    'two_factor_recovery_codes',
+    'two_factor_last_used_counter',
+])]
 final class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, HasRoles, Notifiable, SoftDeletes;
@@ -38,12 +44,12 @@ final class User extends Authenticatable implements MustVerifyEmail
             'phone_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'password' => 'hashed',
+            'two_factor_enabled' => 'boolean',
+            'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'array',
+            'two_factor_confirmed_at' => 'datetime',
+            'two_factor_last_used_counter' => 'integer',
         ];
-    }
-
-    public function canAccessPanel(Panel $panel): bool
-    {
-        return $this->status === 'active' && ($this->hasRole('Super Admin', 'web') || $this->can('panel.access'));
     }
 
     protected function phone(): Attribute
@@ -70,6 +76,11 @@ final class User extends Authenticatable implements MustVerifyEmail
         } catch (NumberParseException $exception) {
             throw new InvalidArgumentException('Format nomor telepon tidak valid.', 0, $exception);
         }
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->status === 'active' && ($this->hasRole('Super Admin', 'web') || $this->can('panel.access'));
     }
 
     public function sendPasswordResetNotification($token): void
