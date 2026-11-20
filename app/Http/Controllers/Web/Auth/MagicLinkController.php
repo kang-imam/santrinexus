@@ -54,6 +54,6 @@ class MagicLinkController extends Controller
             $request
         );
 
-        return redirect()->intended('/dashboard');
+        return redirect()->intended('/account');
     }
 }

@@ -130,7 +130,7 @@ test('user can authenticate using a valid magic link', function () {
     $token = app(MagicLinkService::class)->issue($user);
     $this->post(route('magic-link.verify'), [
         'token' => $token,
-    ])->assertRedirect('/dashboard');
+    ])->assertRedirect('/account');
     $this->assertAuthenticatedAs($user);
     $this->assertDatabaseHas('magic_link_tokens', [
         'user_id' => $user->id,

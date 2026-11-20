@@ -2,21 +2,15 @@
 
 namespace App\Notifications\Auth;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class MagicLinkNotification extends Notification implements ShouldQueue
+final class MagicLinkNotification extends Notification
 {
-    use Queueable;
-
     public function __construct(
         public readonly string $url,
         public readonly int $expirationMinutes
-    ) {
-        $this->afterCommit();
-    }
+    ) {}
 
     public function via(object $notifiable): array
     {
@@ -25,14 +19,16 @@ class MagicLinkNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
+        $data = [
+            'user' => $notifiable,
+            'url' => $this->url,
+            'expirationMinutes' => $this->expirationMinutes,
+            'company' => config('company'),
+        ];
+
         return (new MailMessage)
             ->subject('Tautan Login SantriNexus')
-            ->greeting('Halo, '.$notifiable->name.'!')
-            ->line('Kami menerima permintaan untuk masuk ke akun SantriNexus Anda.')
-            ->line('Gunakan tombol berikut untuk melanjutkan proses login.')
-            ->action('Login Sekarang', $this->url)
-            ->line('Tautan ini hanya dapat digunakan satu kali.')
-            ->line('Tautan akan kedaluwarsa dalam '.$this->expirationMinutes.' menit.')
-            ->line('Jika Anda tidak merasa meminta tautan login ini, abaikan email ini.');
+            ->view('emails.auth.magic-link', $data)
+            ->text('emails.auth.magic-link-text', $data);
     }
 }

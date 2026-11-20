@@ -22,7 +22,8 @@ final class ResetPasswordNotification extends Notification
                 'token' => $this->token,
                 'email' => $notifiable->getEmailForPasswordReset(),
             ]),
-            'count' => config('auth.passwords.'.config('auth.defaults.passwords').'.expire'),
+            'expirationMinutes' => (int) config('auth.passwords.'.config('auth.defaults.passwords').'.expire'),
+            'company' => config('company'),
         ];
 
         return (new MailMessage)
