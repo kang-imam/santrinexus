@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth')->prefix('account')->name('account.')->group(function () {
+Route::middleware(['auth', 'verified'])->prefix('account')->name('account.')->group(function () {
     Route::view('/', 'account.dashboard')->name('dashboard');
     Route::view('/profile', 'account.profile')->name('profile');
     Route::view('/profile/edit', 'account.edit-profile')->name('profile.edit');

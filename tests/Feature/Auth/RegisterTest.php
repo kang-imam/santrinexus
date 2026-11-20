@@ -3,8 +3,10 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 
 uses(RefreshDatabase::class);
 function createRegisterTestUser(array $attributes = []): User
@@ -30,25 +32,29 @@ function validRegisterData(array $attributes = []): array
     ], $attributes);
 }
 test('guest can register using valid data', function () {
+    Notification::fake();
     $response = $this->post(route('register.store'), validRegisterData());
-    $response->assertRedirect(route('login'));
-    $response->assertSessionHas('success', 'Registrasi berhasil. Silakan login.');
+    $response->assertRedirect(route('verification.notice'));
+    $response->assertSessionHas('success', 'Registrasi berhasil. Silakan periksa email untuk memverifikasi akun.');
     $this->assertDatabaseHas('users', [
         'name' => 'Pengguna Baru',
         'username' => 'penggunabaru',
         'email' => 'penggunabaru@example.com',
         'phone' => '+6281234567891',
         'status' => 'active',
+        'email_verified_at' => null,
     ]);
-    $this->assertGuest('web');
+    $this->assertAuthenticatedAs(User::where('email', 'penggunabaru@example.com')->firstOrFail(), 'web');
+    Notification::assertSentTo(User::where('email', 'penggunabaru@example.com')->firstOrFail(), VerifyEmail::class);
 });
 test('registration normalizes name username and email', function () {
+    Notification::fake();
     $response = $this->post(route('register.store'), validRegisterData([
         'name' => '  Pengguna Baru  ',
         'username' => '  pengguna_baru  ',
         'email' => '  PENGGUNABARU@EXAMPLE.COM  ',
     ]));
-    $response->assertRedirect(route('login'));
+    $response->assertRedirect(route('verification.notice'));
     $this->assertDatabaseHas('users', [
         'name' => 'Pengguna Baru',
         'username' => 'pengguna_baru',
@@ -56,156 +62,177 @@ test('registration normalizes name username and email', function () {
     ]);
 });
 test('registration allows empty username', function () {
-    $response = $this->post(route('register.store'), validRegisterData([
-        'username' => '',
-    ]));
-    $response->assertRedirect(route('login'));
+    Notification::fake();
+    $response = $this->post(route('register.store'), validRegisterData(['username' => '']));
+    $response->assertRedirect(route('verification.notice'));
     $this->assertDatabaseHas('users', [
         'email' => 'penggunabaru@example.com',
         'username' => null,
     ]);
 });
 test('registration allows null phone number', function () {
-    $response = $this->post(route('register.store'), validRegisterData([
-        'phone' => '',
-    ]));
-    $response->assertRedirect(route('login'));
+    Notification::fake();
+    $response = $this->post(route('register.store'), validRegisterData(['phone' => '']));
+    $response->assertRedirect(route('verification.notice'));
     $this->assertDatabaseHas('users', [
         'email' => 'penggunabaru@example.com',
         'phone' => null,
     ]);
 });
 test('registration normalizes local phone number to international format', function () {
-    $response = $this->post(route('register.store'), validRegisterData([
-        'phone' => '081234567891',
-    ]));
-    $response->assertRedirect(route('login'));
+    Notification::fake();
+    $response = $this->post(route('register.store'), validRegisterData(['phone' => '081234567891']));
+    $response->assertRedirect(route('verification.notice'));
     $this->assertDatabaseHas('users', [
         'email' => 'penggunabaru@example.com',
         'phone' => '+6281234567891',
     ]);
 });
 test('registration rejects duplicate email', function () {
+    Notification::fake();
     createRegisterTestUser();
-    $response = $this->post(route('register.store'), validRegisterData([
-        'email' => 'pengguna@example.com',
-    ]));
+    $response = $this->post(route('register.store'), validRegisterData(['email' => 'pengguna@example.com']));
     $response->assertSessionHasErrors('email');
     $this->assertDatabaseCount('users', 1);
+    $this->assertGuest('web');
+    Notification::assertNothingSent();
 });
 test('registration rejects duplicate username', function () {
+    Notification::fake();
     createRegisterTestUser();
-    $response = $this->post(route('register.store'), validRegisterData([
-        'username' => 'penggunatest',
-    ]));
+    $response = $this->post(route('register.store'), validRegisterData(['username' => 'penggunatest']));
     $response->assertSessionHasErrors('username');
     $this->assertDatabaseCount('users', 1);
+    $this->assertGuest('web');
+    Notification::assertNothingSent();
 });
 test('registration rejects duplicate phone number', function () {
+    Notification::fake();
     createRegisterTestUser();
-    $response = $this->post(route('register.store'), validRegisterData([
-        'phone' => '081234567890',
-    ]));
+    $response = $this->post(route('register.store'), validRegisterData(['phone' => '081234567890']));
     $response->assertSessionHasErrors('phone');
     $this->assertDatabaseCount('users', 1);
+    $this->assertGuest('web');
+    Notification::assertNothingSent();
 });
 test('registration rejects invalid phone number', function () {
-    $response = $this->post(route('register.store'), validRegisterData([
-        'phone' => '081234',
-    ]));
+    Notification::fake();
+    $response = $this->post(route('register.store'), validRegisterData(['phone' => '081234']));
     $response->assertSessionHasErrors('phone');
     $this->assertDatabaseCount('users', 0);
+    Notification::assertNothingSent();
 });
 test('registration rejects invalid email format', function () {
-    $response = $this->post(route('register.store'), validRegisterData([
-        'email' => 'email-tidak-valid',
-    ]));
+    Notification::fake();
+    $response = $this->post(route('register.store'), validRegisterData(['email' => 'email-tidak-valid']));
     $response->assertSessionHasErrors('email');
     $this->assertDatabaseCount('users', 0);
+    Notification::assertNothingSent();
 });
 test('registration rejects missing name', function () {
-    $response = $this->post(route('register.store'), validRegisterData([
-        'name' => '',
-    ]));
+    Notification::fake();
+    $response = $this->post(route('register.store'), validRegisterData(['name' => '']));
     $response->assertSessionHasErrors('name');
     $this->assertDatabaseCount('users', 0);
+    Notification::assertNothingSent();
 });
 test('registration rejects name shorter than two characters', function () {
-    $response = $this->post(route('register.store'), validRegisterData([
-        'name' => 'A',
-    ]));
+    Notification::fake();
+    $response = $this->post(route('register.store'), validRegisterData(['name' => 'A']));
     $response->assertSessionHasErrors('name');
     $this->assertDatabaseCount('users', 0);
+    Notification::assertNothingSent();
 });
 test('registration rejects missing email', function () {
-    $response = $this->post(route('register.store'), validRegisterData([
-        'email' => '',
-    ]));
+    Notification::fake();
+    $response = $this->post(route('register.store'), validRegisterData(['email' => '']));
     $response->assertSessionHasErrors('email');
     $this->assertDatabaseCount('users', 0);
+    Notification::assertNothingSent();
 });
 test('registration rejects username shorter than three characters', function () {
-    $response = $this->post(route('register.store'), validRegisterData([
-        'username' => 'ab',
-    ]));
+    Notification::fake();
+    $response = $this->post(route('register.store'), validRegisterData(['username' => 'ab']));
     $response->assertSessionHasErrors('username');
     $this->assertDatabaseCount('users', 0);
+    Notification::assertNothingSent();
 });
 test('registration rejects username with invalid characters', function () {
-    $response = $this->post(route('register.store'), validRegisterData([
-        'username' => 'pengguna baru!',
-    ]));
+    Notification::fake();
+    $response = $this->post(route('register.store'), validRegisterData(['username' => 'pengguna baru!']));
     $response->assertSessionHasErrors('username');
     $this->assertDatabaseCount('users', 0);
+    Notification::assertNothingSent();
 });
 test('registration rejects password shorter than eight characters', function () {
+    Notification::fake();
     $response = $this->post(route('register.store'), validRegisterData([
         'password' => 'pass123',
         'password_confirmation' => 'pass123',
     ]));
     $response->assertSessionHasErrors('password');
     $this->assertDatabaseCount('users', 0);
+    Notification::assertNothingSent();
 });
 test('registration rejects password without letters', function () {
+    Notification::fake();
     $response = $this->post(route('register.store'), validRegisterData([
         'password' => '12345678',
         'password_confirmation' => '12345678',
     ]));
     $response->assertSessionHasErrors('password');
     $this->assertDatabaseCount('users', 0);
+    Notification::assertNothingSent();
 });
 test('registration rejects password without numbers', function () {
+    Notification::fake();
     $response = $this->post(route('register.store'), validRegisterData([
         'password' => 'passwordonly',
         'password_confirmation' => 'passwordonly',
     ]));
     $response->assertSessionHasErrors('password');
     $this->assertDatabaseCount('users', 0);
+    Notification::assertNothingSent();
 });
 test('registration rejects mismatched password confirmation', function () {
-    $response = $this->post(route('register.store'), validRegisterData([
-        'password_confirmation' => 'password456',
-    ]));
+    Notification::fake();
+    $response = $this->post(route('register.store'), validRegisterData(['password_confirmation' => 'password456']));
     $response->assertSessionHasErrors('password');
     $this->assertDatabaseCount('users', 0);
+    Notification::assertNothingSent();
 });
 test('registration rejects missing password confirmation', function () {
-    $response = $this->post(route('register.store'), validRegisterData([
-        'password_confirmation' => '',
-    ]));
+    Notification::fake();
+    $response = $this->post(route('register.store'), validRegisterData(['password_confirmation' => '']));
     $response->assertSessionHasErrors('password_confirmation');
     $this->assertDatabaseCount('users', 0);
+    Notification::assertNothingSent();
 });
 test('registration stores password as hash', function () {
+    Notification::fake();
     $this->post(route('register.store'), validRegisterData());
     $user = User::where('email', 'penggunabaru@example.com')->firstOrFail();
     expect(Hash::check('password123', $user->password))->toBeTrue();
     expect($user->password)->not->toBe('password123');
 });
-test('registration does not automatically authenticate user', function () {
+test('registration automatically authenticates user', function () {
+    Notification::fake();
     $response = $this->post(route('register.store'), validRegisterData());
-    $response->assertRedirect(route('login'));
-    $this->assertGuest('web');
+    $response->assertRedirect(route('verification.notice'));
+    $this->assertAuthenticated('web');
+});
+test('registration sends email verification notification', function () {
+    Notification::fake();
+    $this->post(route('register.store'), validRegisterData());
+    $user = User::where('email', 'penggunabaru@example.com')->firstOrFail();
+    Notification::assertSentTo($user, VerifyEmail::class);
+});
+test('registration leaves email unverified', function () {
+    Notification::fake();
+    $this->post(route('register.store'), validRegisterData());
+    $user = User::where('email', 'penggunabaru@example.com')->firstOrFail();
+    expect($user->email_verified_at)->toBeNull();
+    expect($user->hasVerifiedEmail())->toBeFalse();
 });
 test('authenticated user cannot access registration page', function () {
     $user = createRegisterTestUser();

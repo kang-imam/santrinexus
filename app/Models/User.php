@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Notifications\Auth\ResetPasswordNotification;
 use Filament\Panel;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -26,7 +27,7 @@ use Spatie\Permission\Traits\HasRoles;
     'avatar',
 ])]
 #[Hidden(['password', 'remember_token'])]
-final class User extends Authenticatable
+final class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, HasRoles, Notifiable, SoftDeletes;
 

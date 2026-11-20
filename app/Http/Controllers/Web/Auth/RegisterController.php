@@ -7,8 +7,9 @@ use App\DataTransferObjects\Auth\RegisterData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 
-class RegisterController extends Controller
+final class RegisterController extends Controller
 {
     public function __construct(private RegisterUserAction $registerUserAction) {}
 
@@ -23,7 +24,10 @@ class RegisterController extends Controller
             passwordConfirmation: $request->validated('password_confirmation')
         );
         $user = $this->registerUserAction->handle($data);
+        Auth::guard('web')->login($user);
+        $request->session()->regenerate();
+        $user->sendEmailVerificationNotification();
 
-        return redirect()->route('login')->with('success', 'Registrasi berhasil. Silakan login.');
+        return redirect()->route('verification.notice')->with('success', 'Registrasi berhasil. Silakan periksa email untuk memverifikasi akun.');
     }
 }

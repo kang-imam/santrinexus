@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 
-class LoginController extends Controller
+final class LoginController extends Controller
 {
     public function __construct(private LoginUserAction $loginUserAction) {}
 
@@ -20,7 +20,10 @@ class LoginController extends Controller
             password: $validated['password'],
             remember: $validated['remember'] ?? false
         );
-        $this->loginUserAction->handle($data, $request);
+        $user = $this->loginUserAction->handle($data, $request);
+        if (! $user->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice')->with('warning', 'Silakan verifikasi alamat email sebelum melanjutkan.');
+        }
 
         return redirect()->intended(route('account.dashboard'));
     }

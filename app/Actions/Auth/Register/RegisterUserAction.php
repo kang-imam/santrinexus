@@ -6,7 +6,7 @@ use App\DataTransferObjects\Auth\RegisterData;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
-class RegisterUserAction
+final class RegisterUserAction
 {
     public function handle(RegisterData $data): User
     {

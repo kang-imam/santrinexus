@@ -7,6 +7,8 @@ use App\Http\Controllers\Web\Auth\LogoutController;
 use App\Http\Controllers\Web\Auth\MagicLinkController;
 use App\Http\Controllers\Web\Auth\RegisterController;
 use App\Http\Controllers\Web\Auth\ResetPasswordController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -40,7 +42,26 @@ Route::middleware('guest')->group(function () {
 });
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LogoutController::class, 'destroy'])->middleware('throttle:5,1')->name('logout');
-    Route::view('/verify-email', 'auth.verify-email')->name('verification.notice');
+    Route::get('/verify-email', function (Request $request) {
+        if ($request->user()->hasVerifiedEmail()) {
+            return redirect()->intended(route('account.dashboard'));
+        }
+
+        return view('auth.verify-email');
+    })->name('verification.notice');
+    Route::get('/verify-email/{id}/{hash}', function (EmailVerificationRequest $request) {
+        $request->fulfill();
+
+        return redirect()->intended(route('account.dashboard'))->with('success', 'Alamat email berhasil diverifikasi.');
+    })->middleware(['signed', 'throttle:10,1'])->name('verification.verify');
+    Route::post('/email/verification-notification', function (Request $request) {
+        if ($request->user()->hasVerifiedEmail()) {
+            return redirect()->route('account.dashboard');
+        }
+        $request->user()->sendEmailVerificationNotification();
+
+        return back()->with('success', 'Tautan verifikasi email berhasil dikirim ulang.');
+    })->middleware('throttle:6,1')->name('verification.send');
     Route::view('/confirm-password', 'auth.confirm-password')->name('password.confirm');
     Route::view('/two-factor-challenge', 'auth.two-factor-challenge')->name('two-factor.login');
     Route::view('/verify-two-factor', 'auth.verify-two-factor')->name('two-factor.verify');
