@@ -17,6 +17,7 @@
     $mutedColor = $identity['muted_color'] ?? '#94A3B8';
     $supportEmail = $company['contact']['emails']['support'] ?? ($company['contact']['primary_email'] ?? null);
     $websiteUrl = $company['url'] ?? config('app.url');
+    $websiteHost = parse_url($websiteUrl, PHP_URL_HOST);
     $copyright = '© ' . date('Y') . ' ' . $legalName . '. All rights reserved.';
     $emailTitle = $title ?? $brandName;
     $emailPreheader = $preheader ?? '';
@@ -102,13 +103,18 @@
                     <tr>
                         <td align="center" style="padding:0 20px 28px">
                             <a href="{{ $websiteUrl }}" target="_blank" style="display:inline-block">
-                                <img src="{{ $logoUrl }}" width="180" alt="{{ $logoAlt }}"
-                                    style="display:block;width:180px;max-width:100%;height:auto;margin:0 auto">
+                                <img src="{{ $logoUrl }}" width="120" alt="{{ $logoAlt }}"
+                                    style="display:block;width:120px;max-width:100%;height:auto;margin:0 auto">
                             </a>
+                            <p
+                                style="margin:10px 0 0;color:{{ $textColor }};font-size:14px;font-weight:700;line-height:20px;letter-spacing:0.3px">
+                                {{ $brandName }}
+                            </p>
                             @if ($tagline)
                                 <p
-                                    style="margin:12px 0 0;color:{{ $mutedColor }};font-size:11px;line-height:18px;letter-spacing:1.5px;text-transform:uppercase">
-                                    {{ $tagline }}</p>
+                                    style="margin:4px 0 0;color:{{ $mutedColor }};font-size:10px;line-height:16px;letter-spacing:1.2px;text-transform:uppercase">
+                                    {{ $tagline }}
+                                </p>
                             @endif
                         </td>
                     </tr>
@@ -133,15 +139,17 @@
                     <tr>
                         <td class="email-footer" style="padding:28px 24px;text-align:center">
                             <p style="margin:0 0 8px;color:{{ $mutedColor }};font-size:12px;line-height:20px">
-                                {{ $copyright }}</p>
+                                {{ $copyright }}
+                            </p>
                             @if ($supportEmail)
                                 <p style="margin:0 0 8px;color:{{ $mutedColor }};font-size:12px;line-height:20px">
                                     Butuh bantuan? <a href="mailto:{{ $supportEmail }}"
-                                        style="color:{{ $primaryColor }}">{{ $supportEmail }}</a></p>
+                                        style="color:{{ $primaryColor }}">{{ $supportEmail }}</a>
+                                </p>
                             @endif
                             <p style="margin:0;color:{{ $mutedColor }};font-size:11px;line-height:18px">
                                 <a href="{{ $websiteUrl }}" target="_blank"
-                                    style="color:{{ $secondaryColor }}">{{ parse_url($websiteUrl, PHP_URL_HOST) }}</a>
+                                    style="color:{{ $secondaryColor }}">{{ $websiteHost }}</a>
                             </p>
                         </td>
                     </tr>
