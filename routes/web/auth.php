@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Web\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Web\Auth\ForgotPasswordController;
 use App\Http\Controllers\Web\Auth\GoogleAuthController;
 use App\Http\Controllers\Web\Auth\LoginController;
@@ -62,7 +63,10 @@ Route::middleware('auth')->group(function () {
 
         return back()->with('success', 'Tautan verifikasi email berhasil dikirim ulang.');
     })->middleware('throttle:6,1')->name('verification.send');
-    Route::view('/confirm-password', 'auth.confirm-password')->name('password.confirm');
+    Route::controller(ConfirmablePasswordController::class)->group(function () {
+        Route::get('/confirm-password', 'create')->name('password.confirm');
+        Route::post('/confirm-password', 'store')->middleware('throttle:5,1')->name('password.confirm.store');
+    });
     Route::view('/two-factor-challenge', 'auth.two-factor-challenge')->name('two-factor.login');
     Route::view('/verify-two-factor', 'auth.verify-two-factor')->name('two-factor.verify');
     Route::view('/account-disabled', 'auth.errors.account-disabled')->name('account.disabled');
